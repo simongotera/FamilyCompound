@@ -2,23 +2,31 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/lib/AuthProvider'
+import { useLocale } from '@/lib/i18n/LocaleProvider'
 import { supabase } from '@/lib/supabaseClient'
 import Nav from './Nav'
+import { LanguageToggle } from './LanguageToggle'
 
 function Shell({ children }) {
   return (
     <main className="min-h-screen flex items-center justify-center px-6">
-      <div
-        className="w-full max-w-sm rounded-lg p-8 border"
-        style={{ background: 'var(--card)', borderColor: 'var(--line)' }}
-      >
-        {children}
+      <div className="w-full max-w-sm">
+        <div className="flex justify-end mb-3">
+          <LanguageToggle />
+        </div>
+        <div
+          className="rounded-lg p-8 border"
+          style={{ background: 'var(--card)', borderColor: 'var(--line)' }}
+        >
+          {children}
+        </div>
       </div>
     </main>
   )
 }
 
 function LoginForm() {
+  const { t } = useLocale()
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [error, setError] = useState(null)
@@ -41,11 +49,10 @@ function LoginForm() {
     return (
       <div>
         <h1 className="font-display text-2xl mb-2" style={{ color: 'var(--pine-dark)' }}>
-          Check your email
+          {t('auth.checkEmailTitle')}
         </h1>
         <p className="text-sm" style={{ color: 'var(--ink)' }}>
-          We sent a sign-in link to <strong>{email}</strong>. Open it on this
-          device to continue.
+          {t('auth.checkEmailBody', { email })}
         </p>
       </div>
     )
@@ -57,13 +64,12 @@ function LoginForm() {
         The Compound
       </h1>
       <p className="text-sm mb-6" style={{ color: 'var(--ink)' }}>
-        Enter your email and we'll send you a link to sign in — no password
-        needed.
+        {t('auth.loginSubtitle')}
       </p>
       <input
         type="email"
         required
-        placeholder="you@example.com"
+        placeholder={t('auth.emailPlaceholder')}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="w-full border rounded px-3 py-2 mb-3 bg-white"
@@ -79,7 +85,7 @@ function LoginForm() {
         className="w-full rounded py-2 font-medium"
         style={{ background: 'var(--pine)', color: 'var(--card)' }}
       >
-        Send sign-in link
+        {t('auth.sendLink')}
       </button>
     </form>
   )
@@ -87,26 +93,27 @@ function LoginForm() {
 
 function ProfileForm() {
   const { createMemberProfile } = useAuth()
+  const { t, locale } = useLocale()
   const [name, setName] = useState('')
   const [household, setHousehold] = useState('')
   const [error, setError] = useState(null)
 
   async function handleSubmit(e) {
     e.preventDefault()
-    const { error } = await createMemberProfile(name, household)
+    const { error } = await createMemberProfile(name, household, locale)
     if (error) setError(error.message)
   }
 
   return (
     <form onSubmit={handleSubmit}>
       <h1 className="font-display text-2xl mb-1" style={{ color: 'var(--pine-dark)' }}>
-        Welcome!
+        {t('auth.welcomeTitle')}
       </h1>
       <p className="text-sm mb-6" style={{ color: 'var(--ink)' }}>
-        One last step — tell the rest of the family who you are.
+        {t('auth.welcomeSubtitle')}
       </p>
       <label className="text-xs uppercase tracking-wide" style={{ color: 'var(--pine-dark)' }}>
-        Your name
+        {t('auth.yourName')}
       </label>
       <input
         required
@@ -116,12 +123,12 @@ function ProfileForm() {
         style={{ borderColor: 'var(--line)' }}
       />
       <label className="text-xs uppercase tracking-wide" style={{ color: 'var(--pine-dark)' }}>
-        Household / branch (optional)
+        {t('auth.householdLabel')}
       </label>
       <input
         value={household}
         onChange={(e) => setHousehold(e.target.value)}
-        placeholder="e.g. Simon's family"
+        placeholder={t('auth.householdPlaceholder')}
         className="w-full border rounded px-3 py-2 mt-1 mb-3 bg-white"
         style={{ borderColor: 'var(--line)' }}
       />
@@ -135,7 +142,7 @@ function ProfileForm() {
         className="w-full rounded py-2 font-medium"
         style={{ background: 'var(--pine)', color: 'var(--card)' }}
       >
-        Join the compound
+        {t('auth.joinButton')}
       </button>
     </form>
   )

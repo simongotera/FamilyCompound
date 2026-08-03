@@ -5,15 +5,8 @@ import Link from 'next/link'
 import Gate from '@/components/Gate'
 import { Loading, ErrorState } from '@/components/Loading'
 import { useAuth } from '@/lib/AuthProvider'
+import { useLocale } from '@/lib/i18n/LocaleProvider'
 import { supabase } from '@/lib/supabaseClient'
-
-const cards = [
-  { href: '/land', label: 'Land options', desc: 'Compare parcels side by side' },
-  { href: '/priorities', label: 'Priorities', desc: "Everyone's must-haves and dealbreakers" },
-  { href: '/budget', label: 'Budget', desc: 'Who has committed what' },
-  { href: '/decisions', label: 'Decisions', desc: "What we've agreed on, and why" },
-  { href: '/tasks', label: 'Tasks', desc: "What's next, and who owns it" },
-]
 
 function firstName(fullName) {
   return fullName ? fullName.split(' ')[0] : null
@@ -21,11 +14,20 @@ function firstName(fullName) {
 
 function Dashboard() {
   const { member } = useAuth()
+  const { t } = useLocale()
   const [stats, setStats] = useState(null)
   const [upNext, setUpNext] = useState([])
   const [latestDecision, setLatestDecision] = useState(null)
   const [favorite, setFavorite] = useState(null)
   const [error, setError] = useState(null)
+
+  const cards = [
+    { href: '/land', label: t('dashboard.cardLandLabel'), desc: t('dashboard.cardLandDesc') },
+    { href: '/priorities', label: t('dashboard.cardPrioritiesLabel'), desc: t('dashboard.cardPrioritiesDesc') },
+    { href: '/budget', label: t('dashboard.cardBudgetLabel'), desc: t('dashboard.cardBudgetDesc') },
+    { href: '/decisions', label: t('dashboard.cardDecisionsLabel'), desc: t('dashboard.cardDecisionsDesc') },
+    { href: '/tasks', label: t('dashboard.cardTasksLabel'), desc: t('dashboard.cardTasksDesc') },
+  ]
 
   useEffect(() => {
     let cancelled = false
@@ -72,48 +74,49 @@ function Dashboard() {
   return (
     <div>
       <h1 className="font-display text-4xl mb-2" style={{ color: 'var(--pine-dark)' }}>
-        {member?.name ? `Welcome back, ${firstName(member.name)}` : 'Our homestead, in progress'}
+        {member?.name ? t('dashboard.welcomeBack', { name: firstName(member.name) }) : t('dashboard.title')}
       </h1>
       <p className="mb-8" style={{ color: 'var(--ink)' }}>
-        A shared place to compare land, weigh priorities, track the budget, and
-        keep everyone pointed the same direction.
+        {t('dashboard.subtitle')}
       </p>
 
-      {error && <div className="mb-8"><ErrorState message={`Couldn't load the dashboard: ${error}`} /></div>}
+      {error && <div className="mb-8"><ErrorState message={t('dashboard.loadError', { error })} /></div>}
 
-      {!stats && !error && <Loading label="Loading your compound…" />}
+      {!stats && !error && <Loading label={t('dashboard.loadingLabel')} />}
 
       {stats && isFreshStart && (
         <div
           className="rounded-lg border p-5 mb-8"
           style={{ background: 'var(--card)', borderColor: 'var(--clay-light)' }}
         >
-          <p className="font-display text-lg mb-1" style={{ color: 'var(--clay)' }}>Nothing logged yet</p>
+          <p className="font-display text-lg mb-1" style={{ color: 'var(--clay)' }}>{t('dashboard.freshStartTitle')}</p>
           <p className="text-sm" style={{ color: 'var(--ink)' }}>
-            Start by adding a <Link href="/land" className="underline" style={{ color: 'var(--pine)' }}>parcel of land</Link> you&rsquo;re
-            considering, or log your own <Link href="/priorities" className="underline" style={{ color: 'var(--pine)' }}>priorities</Link> so
-            the rest of the family can see them.
+            {t('dashboard.freshStartPrefix')}
+            <Link href="/land" className="underline" style={{ color: 'var(--pine)' }}>{t('dashboard.freshStartLandLink')}</Link>
+            {t('dashboard.freshStartMid')}
+            <Link href="/priorities" className="underline" style={{ color: 'var(--pine)' }}>{t('dashboard.freshStartPrioritiesLink')}</Link>
+            {t('dashboard.freshStartSuffix')}
           </p>
         </div>
       )}
 
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-          <Stat label="Parcels considered" value={stats.land} />
-          <Stat label="Priorities logged" value={stats.priorities} />
-          <Stat label="Committed" value={`$${stats.budget.toLocaleString()}`} />
-          <Stat label="Decisions made" value={stats.decisions} />
-          <Stat label="Open tasks" value={stats.openTasks} />
+          <Stat label={t('dashboard.statLand')} value={stats.land} />
+          <Stat label={t('dashboard.statPriorities')} value={stats.priorities} />
+          <Stat label={t('dashboard.statBudget')} value={`$${stats.budget.toLocaleString()}`} />
+          <Stat label={t('dashboard.statDecisions')} value={stats.decisions} />
+          <Stat label={t('dashboard.statTasks')} value={stats.openTasks} />
         </div>
       )}
 
       {favorite && (
         <div className="rounded-lg border p-4 mb-8 flex items-center justify-between gap-3" style={{ background: 'var(--card)', borderColor: 'var(--pine)' }}>
           <p className="text-sm">
-            <span className="text-xs font-semibold uppercase mr-2" style={{ color: 'var(--pine)' }}>Current favorite</span>
+            <span className="text-xs font-semibold uppercase mr-2" style={{ color: 'var(--pine)' }}>{t('dashboard.currentFavorite')}</span>
             <strong>{favorite.name}</strong>{favorite.location && ` — ${favorite.location}`}
           </p>
-          <Link href="/land" className="text-sm underline shrink-0" style={{ color: 'var(--pine)' }}>View land →</Link>
+          <Link href="/land" className="text-sm underline shrink-0" style={{ color: 'var(--pine)' }}>{t('dashboard.viewLand')}</Link>
         </div>
       )}
 
@@ -121,18 +124,18 @@ function Dashboard() {
         <div className="grid sm:grid-cols-2 gap-4 mb-10">
           <div className="rounded-lg border p-5" style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-display text-lg" style={{ color: 'var(--clay)' }}>Up next</h2>
-              <Link href="/tasks" className="text-xs underline" style={{ color: 'var(--pine)' }}>All tasks →</Link>
+              <h2 className="font-display text-lg" style={{ color: 'var(--clay)' }}>{t('dashboard.upNext')}</h2>
+              <Link href="/tasks" className="text-xs underline" style={{ color: 'var(--pine)' }}>{t('dashboard.allTasks')}</Link>
             </div>
             {upNext.length === 0 ? (
-              <p className="text-sm" style={{ color: 'var(--ink)' }}>No open tasks — nice and clear.</p>
+              <p className="text-sm" style={{ color: 'var(--ink)' }}>{t('dashboard.noOpenTasks')}</p>
             ) : (
               <ul className="space-y-2">
-                {upNext.map((t) => (
-                  <li key={t.id} className="text-sm flex justify-between gap-2">
-                    <span>{t.title}</span>
+                {upNext.map((task) => (
+                  <li key={task.id} className="text-sm flex justify-between gap-2">
+                    <span>{task.title}</span>
                     <span className="shrink-0" style={{ color: 'var(--ink)' }}>
-                      {t.due_date ? new Date(t.due_date).toLocaleDateString() : t.members?.name || ''}
+                      {task.due_date ? new Date(task.due_date).toLocaleDateString() : task.members?.name || ''}
                     </span>
                   </li>
                 ))}
@@ -142,8 +145,8 @@ function Dashboard() {
 
           <div className="rounded-lg border p-5" style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-display text-lg" style={{ color: 'var(--clay)' }}>Latest decision</h2>
-              <Link href="/decisions" className="text-xs underline" style={{ color: 'var(--pine)' }}>Full log →</Link>
+              <h2 className="font-display text-lg" style={{ color: 'var(--clay)' }}>{t('dashboard.latestDecision')}</h2>
+              <Link href="/decisions" className="text-xs underline" style={{ color: 'var(--pine)' }}>{t('dashboard.fullLog')}</Link>
             </div>
             {latestDecision ? (
               <div>
@@ -153,7 +156,7 @@ function Dashboard() {
                 </p>
               </div>
             ) : (
-              <p className="text-sm" style={{ color: 'var(--ink)' }}>Nothing decided yet.</p>
+              <p className="text-sm" style={{ color: 'var(--ink)' }}>{t('dashboard.nothingDecided')}</p>
             )}
           </div>
         </div>

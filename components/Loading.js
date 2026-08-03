@@ -1,11 +1,16 @@
-export function Loading({ label = 'Loading…' }) {
+'use client'
+
+import { useLocale } from '@/lib/i18n/LocaleProvider'
+
+export function Loading({ label }) {
+  const { t } = useLocale()
   return (
     <div className="flex items-center justify-center gap-2 py-10 text-sm" style={{ color: 'var(--ink)' }}>
       <span
         className="inline-block h-4 w-4 rounded-full border-2 animate-spin"
         style={{ borderColor: 'var(--line)', borderTopColor: 'var(--pine)' }}
       />
-      {label}
+      {label ?? t('common.loading')}
     </div>
   )
 }
@@ -19,14 +24,15 @@ export function EmptyState({ title, hint }) {
   )
 }
 
-export function ErrorState({ message = "Couldn't load this — check your connection and try refreshing." }) {
+export function ErrorState({ message }) {
+  const { t } = useLocale()
   return (
     <div
       className="rounded-lg border p-4 text-sm"
       style={{ borderColor: 'var(--clay)', background: 'var(--card)', color: 'var(--clay)' }}
       role="alert"
     >
-      {message}
+      {message ?? t('common.errorLoad')}
     </div>
   )
 }

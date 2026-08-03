@@ -3,19 +3,22 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/AuthProvider'
-
-const links = [
-  { href: '/', label: 'Home' },
-  { href: '/land', label: 'Land' },
-  { href: '/priorities', label: 'Priorities' },
-  { href: '/budget', label: 'Budget' },
-  { href: '/decisions', label: 'Decisions' },
-  { href: '/tasks', label: 'Tasks' },
-]
+import { useLocale } from '@/lib/i18n/LocaleProvider'
+import { LanguageToggle } from './LanguageToggle'
 
 export default function Nav() {
   const pathname = usePathname()
   const { member, signOut } = useAuth()
+  const { t } = useLocale()
+
+  const links = [
+    { href: '/', label: t('nav.home') },
+    { href: '/land', label: t('nav.land') },
+    { href: '/priorities', label: t('nav.priorities') },
+    { href: '/budget', label: t('nav.budget') },
+    { href: '/decisions', label: t('nav.decisions') },
+    { href: '/tasks', label: t('nav.tasks') },
+  ]
 
   return (
     <header
@@ -46,6 +49,7 @@ export default function Nav() {
           })}
         </nav>
         <div className="flex items-center gap-3 text-sm">
+          <LanguageToggle />
           {member && (
             <span style={{ color: 'var(--pine-dark)' }}>
               {member.name}
@@ -59,7 +63,7 @@ export default function Nav() {
             className="underline decoration-dotted underline-offset-4"
             style={{ color: 'var(--clay)' }}
           >
-            Sign out
+            {t('common.signOut')}
           </button>
         </div>
       </div>

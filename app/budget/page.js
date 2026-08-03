@@ -5,10 +5,12 @@ import Gate from '@/components/Gate'
 import { Loading, EmptyState, ErrorState } from '@/components/Loading'
 import { DeleteButton } from '@/components/DeleteButton'
 import { useAuth } from '@/lib/AuthProvider'
+import { useLocale } from '@/lib/i18n/LocaleProvider'
 import { supabase } from '@/lib/supabaseClient'
 
 function BudgetPage() {
   const { member } = useAuth()
+  const { t } = useLocale()
   const [items, setItems] = useState([])
   const [amount, setAmount] = useState('')
   const [notes, setNotes] = useState('')
@@ -63,9 +65,9 @@ function BudgetPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl mb-2" style={{ color: 'var(--pine-dark)' }}>Budget</h1>
+      <h1 className="font-display text-3xl mb-2" style={{ color: 'var(--pine-dark)' }}>{t('budget.title')}</h1>
       <p className="text-sm mb-6" style={{ color: 'var(--ink)' }}>
-        What each household has committed toward the compound.
+        {t('budget.subtitle')}
       </p>
 
       {error && <div className="mb-6"><ErrorState message={error} /></div>}
@@ -78,14 +80,14 @@ function BudgetPage() {
             <div className="font-display text-4xl" style={{ color: 'var(--pine-dark)' }}>
               ${total.toLocaleString()}
             </div>
-            <div className="text-xs uppercase tracking-wide mt-1" style={{ color: 'var(--ink)' }}>Total committed</div>
+            <div className="text-xs uppercase tracking-wide mt-1" style={{ color: 'var(--ink)' }}>{t('budget.totalCommitted')}</div>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-6 mb-8">
             <div>
-              <h3 className="font-display text-lg mb-2" style={{ color: 'var(--clay)' }}>By household</h3>
+              <h3 className="font-display text-lg mb-2" style={{ color: 'var(--clay)' }}>{t('budget.byHousehold')}</h3>
               {Object.keys(byPerson).length === 0 ? (
-                <p className="text-sm" style={{ color: 'var(--ink)' }}>No contributions logged yet.</p>
+                <p className="text-sm" style={{ color: 'var(--ink)' }}>{t('budget.noContributions')}</p>
               ) : (
                 <ul className="space-y-1 text-sm">
                   {Object.entries(byPerson)
@@ -101,20 +103,20 @@ function BudgetPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="rounded-lg border p-5" style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
-              <h3 className="font-display text-lg mb-3" style={{ color: 'var(--clay)' }}>Log a contribution</h3>
-              <label className="text-xs uppercase tracking-wide block mb-1" style={{ color: 'var(--pine-dark)' }}>Amount ($)</label>
+              <h3 className="font-display text-lg mb-3" style={{ color: 'var(--clay)' }}>{t('budget.logContribution')}</h3>
+              <label className="text-xs uppercase tracking-wide block mb-1" style={{ color: 'var(--pine-dark)' }}>{t('budget.amountLabel')}</label>
               <input required type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full border rounded px-3 py-2 mb-3 bg-white" style={{ borderColor: 'var(--line)' }} />
-              <label className="text-xs uppercase tracking-wide block mb-1" style={{ color: 'var(--pine-dark)' }}>Notes</label>
-              <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. initial deposit" className="w-full border rounded px-3 py-2 mb-3 bg-white" style={{ borderColor: 'var(--line)' }} />
+              <label className="text-xs uppercase tracking-wide block mb-1" style={{ color: 'var(--pine-dark)' }}>{t('budget.notesLabel')}</label>
+              <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('budget.notesPlaceholder')} className="w-full border rounded px-3 py-2 mb-3 bg-white" style={{ borderColor: 'var(--line)' }} />
               <button type="submit" disabled={saving} className="rounded px-4 py-2 font-medium" style={{ background: 'var(--pine)', color: 'var(--card)' }}>
-                {saving ? 'Adding…' : 'Add'}
+                {saving ? t('budget.adding') : t('budget.add')}
               </button>
             </form>
           </div>
 
-          <h3 className="font-display text-lg mb-2" style={{ color: 'var(--clay)' }}>History</h3>
+          <h3 className="font-display text-lg mb-2" style={{ color: 'var(--clay)' }}>{t('budget.history')}</h3>
           {items.length === 0 ? (
-            <EmptyState title="No contributions yet" hint="Log the first one using the form above." />
+            <EmptyState title={t('budget.emptyTitle')} hint={t('budget.emptyHint')} />
           ) : (
             <ul className="space-y-1 text-sm">
               {items.map((i) => (
@@ -122,7 +124,7 @@ function BudgetPage() {
                   <span>{i.members?.name} {i.notes && `— ${i.notes}`}</span>
                   <span className="flex items-center gap-3 shrink-0">
                     ${Number(i.amount).toLocaleString()}
-                    {i.member_id === member.id && <DeleteButton onDelete={() => handleDelete(i.id)} confirmText="Delete this contribution?" />}
+                    {i.member_id === member.id && <DeleteButton onDelete={() => handleDelete(i.id)} confirmText={t('budget.deleteConfirm')} />}
                   </span>
                 </li>
               ))}

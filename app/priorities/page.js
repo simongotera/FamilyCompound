@@ -5,10 +5,12 @@ import Gate from '@/components/Gate'
 import { Loading, EmptyState, ErrorState } from '@/components/Loading'
 import { DeleteButton } from '@/components/DeleteButton'
 import { useAuth } from '@/lib/AuthProvider'
+import { useLocale } from '@/lib/i18n/LocaleProvider'
 import { supabase } from '@/lib/supabaseClient'
 
 function PrioritiesPage() {
   const { member } = useAuth()
+  const { t } = useLocale()
   const [items, setItems] = useState([])
   const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
@@ -66,11 +68,11 @@ function PrioritiesPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl mb-2" style={{ color: 'var(--pine-dark)' }}>Priorities & dealbreakers</h1>
+      <h1 className="font-display text-3xl mb-2" style={{ color: 'var(--pine-dark)' }}>{t('priorities.title')}</h1>
       <p className="text-sm mb-6" style={{ color: 'var(--ink)' }}>
-        Everyone sees everyone else&apos;s — this is how conflicts surface early instead of at closing.
+        {t('priorities.subtitle')}
         {!loading && items.length > 0 && (
-          <span> <strong style={{ color: 'var(--clay)' }}>{dealbreakerCount}</strong> dealbreaker{dealbreakerCount === 1 ? '' : 's'} logged so far.</span>
+          <span> {t(dealbreakerCount === 1 ? 'priorities.dealbreakerCountOne' : 'priorities.dealbreakerCountOther', { count: dealbreakerCount })}</span>
         )}
       </p>
 
@@ -78,26 +80,26 @@ function PrioritiesPage() {
 
       <form onSubmit={handleSubmit} className="rounded-lg border p-5 mb-8 grid sm:grid-cols-4 gap-3 items-end" style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
         <div>
-          <label className="text-xs uppercase tracking-wide block mb-1" style={{ color: 'var(--pine-dark)' }}>Category</label>
-          <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. budget" className="w-full border rounded px-3 py-2 bg-white" style={{ borderColor: 'var(--line)' }} />
+          <label className="text-xs uppercase tracking-wide block mb-1" style={{ color: 'var(--pine-dark)' }}>{t('priorities.categoryLabel')}</label>
+          <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder={t('priorities.categoryPlaceholder')} className="w-full border rounded px-3 py-2 bg-white" style={{ borderColor: 'var(--line)' }} />
         </div>
         <div className="sm:col-span-2">
-          <label className="text-xs uppercase tracking-wide block mb-1" style={{ color: 'var(--pine-dark)' }}>What matters to you</label>
-          <input required value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. needs reliable cell signal" className="w-full border rounded px-3 py-2 bg-white" style={{ borderColor: 'var(--line)' }} />
+          <label className="text-xs uppercase tracking-wide block mb-1" style={{ color: 'var(--pine-dark)' }}>{t('priorities.whatMatters')}</label>
+          <input required value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('priorities.whatMattersPlaceholder')} className="w-full border rounded px-3 py-2 bg-white" style={{ borderColor: 'var(--line)' }} />
         </div>
         <div className="flex items-center gap-2">
           <input type="checkbox" checked={isDealbreaker} onChange={(e) => setIsDealbreaker(e.target.checked)} id="db" />
-          <label htmlFor="db" className="text-sm">Dealbreaker</label>
+          <label htmlFor="db" className="text-sm">{t('priorities.dealbreakerCheckbox')}</label>
         </div>
         <button type="submit" disabled={saving} className="rounded px-4 py-2 font-medium sm:col-span-4 justify-self-start" style={{ background: 'var(--clay)', color: 'var(--card)' }}>
-          {saving ? 'Adding…' : 'Add'}
+          {saving ? t('priorities.adding') : t('priorities.add')}
         </button>
       </form>
 
       {loading ? (
         <Loading />
       ) : Object.keys(grouped).length === 0 ? (
-        <EmptyState title="Nobody's added their priorities yet" hint="Be the first — add what matters most to you above." />
+        <EmptyState title={t('priorities.emptyTitle')} hint={t('priorities.emptyHint')} />
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
           {Object.entries(grouped).map(([name, list]) => (
@@ -107,12 +109,12 @@ function PrioritiesPage() {
                 {list.map((i) => (
                   <li key={i.id} className="text-sm flex items-start justify-between gap-2">
                     <span>
-                      {i.is_dealbreaker && <span className="text-xs font-semibold uppercase mr-2" style={{ color: 'var(--clay)' }}>Dealbreaker</span>}
+                      {i.is_dealbreaker && <span className="text-xs font-semibold uppercase mr-2" style={{ color: 'var(--clay)' }}>{t('priorities.dealbreakerTag')}</span>}
                       {i.category && <span className="italic mr-1">[{i.category}]</span>}
                       {i.description}
                     </span>
                     {i.member_id === member.id && (
-                      <DeleteButton onDelete={() => handleDelete(i.id)} confirmText="Delete this priority?" />
+                      <DeleteButton onDelete={() => handleDelete(i.id)} confirmText={t('priorities.deleteConfirm')} />
                     )}
                   </li>
                 ))}

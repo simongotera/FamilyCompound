@@ -5,6 +5,7 @@ import Gate from '@/components/Gate'
 import { Loading, EmptyState, ErrorState } from '@/components/Loading'
 import { DeleteButton } from '@/components/DeleteButton'
 import { useAuth } from '@/lib/AuthProvider'
+import { useLocale } from '@/lib/i18n/LocaleProvider'
 import { supabase } from '@/lib/supabaseClient'
 
 const STATUS_COLORS = {
@@ -13,14 +14,6 @@ const STATUS_COLORS = {
   rejected: '#8a8a8a',
   offer_made: 'var(--clay)',
   purchased: 'var(--pine-dark)',
-}
-
-const STATUS_LABELS = {
-  considering: 'Considering',
-  favorite: 'Favorite',
-  rejected: 'Rejected',
-  offer_made: 'Offer made',
-  purchased: 'Purchased',
 }
 
 const FILTERS = ['all', 'considering', 'favorite', 'offer_made', 'purchased', 'rejected']
@@ -34,6 +27,7 @@ function emptyForm() {
 
 function LandPage() {
   const { member } = useAuth()
+  const { t } = useLocale()
   const [options, setOptions] = useState([])
   const [form, setForm] = useState(emptyForm())
   const [showForm, setShowForm] = useState(false)
@@ -41,6 +35,14 @@ function LandPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('all')
+
+  const statusLabels = {
+    considering: t('land.statusConsidering'),
+    favorite: t('land.statusFavorite'),
+    rejected: t('land.statusRejected'),
+    offer_made: t('land.statusOfferMade'),
+    purchased: t('land.statusPurchased'),
+  }
 
   async function load() {
     setLoading(true)
@@ -93,13 +95,13 @@ function LandPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-3xl" style={{ color: 'var(--pine-dark)' }}>Land options</h1>
+        <h1 className="font-display text-3xl" style={{ color: 'var(--pine-dark)' }}>{t('land.title')}</h1>
         <button
           onClick={() => setShowForm((s) => !s)}
           className="rounded-full px-4 py-2 text-sm font-medium"
           style={{ background: 'var(--pine)', color: 'var(--card)' }}
         >
-          {showForm ? 'Cancel' : '+ Add parcel'}
+          {showForm ? t('common.cancel') : t('land.addParcel')}
         </button>
       </div>
 
@@ -107,19 +109,19 @@ function LandPage() {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="rounded-lg border p-5 mb-8 grid sm:grid-cols-2 gap-3" style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
-          <Input label="Name / nickname" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
-          <Input label="Location" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
-          <Input label="Acreage" type="number" value={form.acreage} onChange={(v) => setForm({ ...form, acreage: v })} />
-          <Input label="Price ($)" type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
-          <Input label="Water source" value={form.water_source} onChange={(v) => setForm({ ...form, water_source: v })} />
-          <Input label="Zoning" value={form.zoning} onChange={(v) => setForm({ ...form, zoning: v })} />
-          <Input label="Utilities" value={form.utilities} onChange={(v) => setForm({ ...form, utilities: v })} />
-          <Input label="Listing URL" value={form.listing_url} onChange={(v) => setForm({ ...form, listing_url: v })} />
-          <Textarea label="Pros" value={form.pros} onChange={(v) => setForm({ ...form, pros: v })} />
-          <Textarea label="Cons" value={form.cons} onChange={(v) => setForm({ ...form, cons: v })} />
+          <Input label={t('land.nameLabel')} value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
+          <Input label={t('land.locationLabel')} value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
+          <Input label={t('land.acreageLabel')} type="number" value={form.acreage} onChange={(v) => setForm({ ...form, acreage: v })} />
+          <Input label={t('land.priceLabel')} type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
+          <Input label={t('land.waterSourceLabel')} value={form.water_source} onChange={(v) => setForm({ ...form, water_source: v })} />
+          <Input label={t('land.zoningLabel')} value={form.zoning} onChange={(v) => setForm({ ...form, zoning: v })} />
+          <Input label={t('land.utilitiesLabel')} value={form.utilities} onChange={(v) => setForm({ ...form, utilities: v })} />
+          <Input label={t('land.listingUrlLabel')} value={form.listing_url} onChange={(v) => setForm({ ...form, listing_url: v })} />
+          <Textarea label={t('land.prosLabel')} value={form.pros} onChange={(v) => setForm({ ...form, pros: v })} />
+          <Textarea label={t('land.consLabel')} value={form.cons} onChange={(v) => setForm({ ...form, cons: v })} />
           <div className="sm:col-span-2">
             <button type="submit" disabled={saving} className="rounded px-4 py-2 font-medium" style={{ background: 'var(--clay)', color: 'var(--card)' }}>
-              {saving ? 'Saving…' : 'Save parcel'}
+              {saving ? t('land.saving') : t('land.saveParcel')}
             </button>
           </div>
         </form>
@@ -138,7 +140,7 @@ function LandPage() {
                 borderColor: filter === f ? 'var(--pine)' : 'var(--line)',
               }}
             >
-              {f === 'all' ? `All (${options.length})` : STATUS_LABELS[f]}
+              {f === 'all' ? t('land.filterAll', { count: options.length }) : statusLabels[f]}
             </button>
           ))}
         </div>
@@ -147,9 +149,9 @@ function LandPage() {
       {loading ? (
         <Loading />
       ) : options.length === 0 ? (
-        <EmptyState title="No parcels yet" hint="Add the first one being considered." />
+        <EmptyState title={t('land.emptyTitle')} hint={t('land.emptyHint')} />
       ) : filtered.length === 0 ? (
-        <EmptyState title="Nothing in this view" hint="Try a different filter above." />
+        <EmptyState title={t('land.emptyFilteredTitle')} hint={t('land.emptyFilteredHint')} />
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
           {filtered.map((o) => (
@@ -162,29 +164,29 @@ function LandPage() {
                   className="text-xs rounded-full px-2 py-1 border bg-white"
                   style={{ borderColor: 'var(--line)', color: STATUS_COLORS[o.status] }}
                 >
-                  <option value="considering">Considering</option>
-                  <option value="favorite">Favorite</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="offer_made">Offer made</option>
-                  <option value="purchased">Purchased</option>
+                  <option value="considering">{statusLabels.considering}</option>
+                  <option value="favorite">{statusLabels.favorite}</option>
+                  <option value="rejected">{statusLabels.rejected}</option>
+                  <option value="offer_made">{statusLabels.offer_made}</option>
+                  <option value="purchased">{statusLabels.purchased}</option>
                 </select>
               </div>
               <p className="text-sm mb-2" style={{ color: 'var(--ink)' }}>
-                {o.location} {o.acreage ? `· ${o.acreage} acres` : ''} {o.price ? `· $${Number(o.price).toLocaleString()}` : ''}
+                {o.location} {o.acreage ? `· ${o.acreage} ${t('land.acres')}` : ''} {o.price ? `· $${Number(o.price).toLocaleString()}` : ''}
               </p>
-              {o.water_source && <p className="text-sm"><strong>Water:</strong> {o.water_source}</p>}
-              {o.zoning && <p className="text-sm"><strong>Zoning:</strong> {o.zoning}</p>}
-              {o.utilities && <p className="text-sm mb-2"><strong>Utilities:</strong> {o.utilities}</p>}
-              {o.pros && <p className="text-sm mt-2"><strong>Pros:</strong> {o.pros}</p>}
-              {o.cons && <p className="text-sm"><strong>Cons:</strong> {o.cons}</p>}
+              {o.water_source && <p className="text-sm"><strong>{t('land.waterLabel')}</strong> {o.water_source}</p>}
+              {o.zoning && <p className="text-sm"><strong>{t('land.zoningFieldLabel')}</strong> {o.zoning}</p>}
+              {o.utilities && <p className="text-sm mb-2"><strong>{t('land.utilitiesFieldLabel')}</strong> {o.utilities}</p>}
+              {o.pros && <p className="text-sm mt-2"><strong>{t('land.prosFieldLabel')}</strong> {o.pros}</p>}
+              {o.cons && <p className="text-sm"><strong>{t('land.consFieldLabel')}</strong> {o.cons}</p>}
               {o.listing_url && (
                 <a href={o.listing_url} target="_blank" rel="noreferrer" className="text-sm underline block mt-2" style={{ color: 'var(--pine)' }}>
-                  View listing
+                  {t('land.viewListing')}
                 </a>
               )}
               {o.added_by === member.id && (
                 <div className="mt-3 pt-3 border-t flex justify-end" style={{ borderColor: 'var(--line)' }}>
-                  <DeleteButton onDelete={() => handleDelete(o.id)} label="Delete parcel" confirmText={`Delete "${o.name}"? This can't be undone.`} />
+                  <DeleteButton onDelete={() => handleDelete(o.id)} label={t('land.deleteParcel')} confirmText={t('land.deleteConfirm', { name: o.name })} />
                 </div>
               )}
             </div>

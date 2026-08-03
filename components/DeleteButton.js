@@ -1,8 +1,12 @@
 'use client'
 
-export function DeleteButton({ onDelete, label = 'Delete', confirmText = "Delete this? This can't be undone." }) {
+import { useLocale } from '@/lib/i18n/LocaleProvider'
+
+export function DeleteButton({ onDelete, label, confirmText }) {
+  const { t } = useLocale()
+
   function handleClick() {
-    if (window.confirm(confirmText)) onDelete()
+    if (window.confirm(confirmText ?? t('common.deleteConfirmDefault'))) onDelete()
   }
 
   return (
@@ -12,7 +16,7 @@ export function DeleteButton({ onDelete, label = 'Delete', confirmText = "Delete
       className="text-xs underline decoration-dotted underline-offset-4 shrink-0"
       style={{ color: 'var(--clay)' }}
     >
-      {label}
+      {label ?? t('common.delete')}
     </button>
   )
 }
