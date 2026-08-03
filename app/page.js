@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Gate from '@/components/Gate'
+import { Loading, ErrorState } from '@/components/Loading'
+import { useAuth } from '@/lib/AuthProvider'
 import { supabase } from '@/lib/supabaseClient'
 
 const cards = [
@@ -13,18 +15,42 @@ const cards = [
   { href: '/tasks', label: 'Tasks', desc: "What's next, and who owns it" },
 ]
 
+function firstName(fullName) {
+  return fullName ? fullName.split(' ')[0] : null
+}
+
 function Dashboard() {
+  const { member } = useAuth()
   const [stats, setStats] = useState(null)
+  const [upNext, setUpNext] = useState([])
+  const [latestDecision, setLatestDecision] = useState(null)
+  const [favorite, setFavorite] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
+    let cancelled = false
     async function load() {
-      const [land, priorities, budget, decisions, tasks] = await Promise.all([
+      setError(null)
+      const [land, priorities, budget, decisions, tasks, upNextRes, latestDecisionRes, favoriteRes] = await Promise.all([
         supabase.from('land_options').select('id', { count: 'exact', head: true }),
         supabase.from('priorities').select('id', { count: 'exact', head: true }),
         supabase.from('budget_contributions').select('amount'),
         supabase.from('decisions').select('id', { count: 'exact', head: true }),
-        supabase.from('tasks').select('id', { count: 'exact' }).neq('status', 'done'),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }).neq('status', 'done'),
+        supabase.from('tasks').select('id, title, due_date, members(name)').neq('status', 'done').order('due_date', { ascending: true, nullsFirst: false }).limit(3),
+        supabase.from('decisions').select('id, title, created_at, members(name)').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('land_options').select('id, name, location').eq('status', 'favorite').limit(1).maybeSingle(),
       ])
+
+      if (cancelled) return
+
+      const firstError = [land, priorities, budget, decisions, tasks, upNextRes, latestDecisionRes, favoriteRes]
+        .find((r) => r.error)?.error
+      if (firstError) {
+        setError(firstError.message)
+        return
+      }
+
       const total = (budget.data || []).reduce((sum, b) => sum + Number(b.amount), 0)
       setStats({
         land: land.count || 0,
@@ -33,27 +59,103 @@ function Dashboard() {
         decisions: decisions.count || 0,
         openTasks: tasks.count || 0,
       })
+      setUpNext(upNextRes.data || [])
+      setLatestDecision(latestDecisionRes.data || null)
+      setFavorite(favoriteRes.data || null)
     }
     load()
+    return () => { cancelled = true }
   }, [])
+
+  const isFreshStart = stats && stats.land === 0 && stats.priorities === 0 && stats.decisions === 0 && stats.openTasks === 0
 
   return (
     <div>
       <h1 className="font-display text-4xl mb-2" style={{ color: 'var(--pine-dark)' }}>
-        Our homestead, in progress
+        {member?.name ? `Welcome back, ${firstName(member.name)}` : 'Our homestead, in progress'}
       </h1>
       <p className="mb-8" style={{ color: 'var(--ink)' }}>
         A shared place to compare land, weigh priorities, track the budget, and
         keep everyone pointed the same direction.
       </p>
 
+      {error && <div className="mb-8"><ErrorState message={`Couldn't load the dashboard: ${error}`} /></div>}
+
+      {!stats && !error && <Loading label="Loading your compound…" />}
+
+      {stats && isFreshStart && (
+        <div
+          className="rounded-lg border p-5 mb-8"
+          style={{ background: 'var(--card)', borderColor: 'var(--clay-light)' }}
+        >
+          <p className="font-display text-lg mb-1" style={{ color: 'var(--clay)' }}>Nothing logged yet</p>
+          <p className="text-sm" style={{ color: 'var(--ink)' }}>
+            Start by adding a <Link href="/land" className="underline" style={{ color: 'var(--pine)' }}>parcel of land</Link> you&rsquo;re
+            considering, or log your own <Link href="/priorities" className="underline" style={{ color: 'var(--pine)' }}>priorities</Link> so
+            the rest of the family can see them.
+          </p>
+        </div>
+      )}
+
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-10">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           <Stat label="Parcels considered" value={stats.land} />
           <Stat label="Priorities logged" value={stats.priorities} />
           <Stat label="Committed" value={`$${stats.budget.toLocaleString()}`} />
           <Stat label="Decisions made" value={stats.decisions} />
           <Stat label="Open tasks" value={stats.openTasks} />
+        </div>
+      )}
+
+      {favorite && (
+        <div className="rounded-lg border p-4 mb-8 flex items-center justify-between gap-3" style={{ background: 'var(--card)', borderColor: 'var(--pine)' }}>
+          <p className="text-sm">
+            <span className="text-xs font-semibold uppercase mr-2" style={{ color: 'var(--pine)' }}>Current favorite</span>
+            <strong>{favorite.name}</strong>{favorite.location && ` — ${favorite.location}`}
+          </p>
+          <Link href="/land" className="text-sm underline shrink-0" style={{ color: 'var(--pine)' }}>View land →</Link>
+        </div>
+      )}
+
+      {stats && !isFreshStart && (
+        <div className="grid sm:grid-cols-2 gap-4 mb-10">
+          <div className="rounded-lg border p-5" style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display text-lg" style={{ color: 'var(--clay)' }}>Up next</h2>
+              <Link href="/tasks" className="text-xs underline" style={{ color: 'var(--pine)' }}>All tasks →</Link>
+            </div>
+            {upNext.length === 0 ? (
+              <p className="text-sm" style={{ color: 'var(--ink)' }}>No open tasks — nice and clear.</p>
+            ) : (
+              <ul className="space-y-2">
+                {upNext.map((t) => (
+                  <li key={t.id} className="text-sm flex justify-between gap-2">
+                    <span>{t.title}</span>
+                    <span className="shrink-0" style={{ color: 'var(--ink)' }}>
+                      {t.due_date ? new Date(t.due_date).toLocaleDateString() : t.members?.name || ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="rounded-lg border p-5" style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display text-lg" style={{ color: 'var(--clay)' }}>Latest decision</h2>
+              <Link href="/decisions" className="text-xs underline" style={{ color: 'var(--pine)' }}>Full log →</Link>
+            </div>
+            {latestDecision ? (
+              <div>
+                <p className="text-sm font-medium">{latestDecision.title}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--ink)' }}>
+                  {latestDecision.members?.name} · {new Date(latestDecision.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm" style={{ color: 'var(--ink)' }}>Nothing decided yet.</p>
+            )}
+          </div>
         </div>
       )}
 

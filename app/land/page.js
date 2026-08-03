@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Gate from '@/components/Gate'
+import { Loading, EmptyState, ErrorState } from '@/components/Loading'
 import { useAuth } from '@/lib/AuthProvider'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -12,6 +13,16 @@ const STATUS_COLORS = {
   offer_made: 'var(--clay)',
   purchased: 'var(--pine-dark)',
 }
+
+const STATUS_LABELS = {
+  considering: 'Considering',
+  favorite: 'Favorite',
+  rejected: 'Rejected',
+  offer_made: 'Offer made',
+  purchased: 'Purchased',
+}
+
+const FILTERS = ['all', 'considering', 'favorite', 'offer_made', 'purchased', 'rejected']
 
 function emptyForm() {
   return {
@@ -26,11 +37,16 @@ function LandPage() {
   const [form, setForm] = useState(emptyForm())
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+  const [filter, setFilter] = useState('all')
 
   async function load() {
     setLoading(true)
-    const { data } = await supabase.from('land_options').select('*').order('created_at', { ascending: false })
-    setOptions(data || [])
+    setError(null)
+    const { data, error } = await supabase.from('land_options').select('*').order('created_at', { ascending: false })
+    if (error) setError(error.message)
+    else setOptions(data || [])
     setLoading(false)
   }
 
@@ -38,21 +54,30 @@ function LandPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    await supabase.from('land_options').insert({
+    setSaving(true)
+    const { error } = await supabase.from('land_options').insert({
       ...form,
       acreage: form.acreage ? Number(form.acreage) : null,
       price: form.price ? Number(form.price) : null,
       added_by: member.id,
     })
+    setSaving(false)
+    if (error) { setError(error.message); return }
     setForm(emptyForm())
     setShowForm(false)
     load()
   }
 
   async function updateStatus(id, status) {
-    await supabase.from('land_options').update({ status }).eq('id', id)
-    load()
+    setOptions((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)))
+    const { error } = await supabase.from('land_options').update({ status }).eq('id', id)
+    if (error) { setError(error.message); load() }
   }
+
+  const filtered = useMemo(
+    () => (filter === 'all' ? options : options.filter((o) => o.status === filter)),
+    [options, filter]
+  )
 
   return (
     <div>
@@ -67,6 +92,8 @@ function LandPage() {
         </button>
       </div>
 
+      {error && <div className="mb-6"><ErrorState message={error} /></div>}
+
       {showForm && (
         <form onSubmit={handleSubmit} className="rounded-lg border p-5 mb-8 grid sm:grid-cols-2 gap-3" style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
           <Input label="Name / nickname" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
@@ -80,20 +107,41 @@ function LandPage() {
           <Textarea label="Pros" value={form.pros} onChange={(v) => setForm({ ...form, pros: v })} />
           <Textarea label="Cons" value={form.cons} onChange={(v) => setForm({ ...form, cons: v })} />
           <div className="sm:col-span-2">
-            <button type="submit" className="rounded px-4 py-2 font-medium" style={{ background: 'var(--clay)', color: 'var(--card)' }}>
-              Save parcel
+            <button type="submit" disabled={saving} className="rounded px-4 py-2 font-medium" style={{ background: 'var(--clay)', color: 'var(--card)' }}>
+              {saving ? 'Saving…' : 'Save parcel'}
             </button>
           </div>
         </form>
       )}
 
+      {!loading && options.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className="px-3 py-1 rounded-full text-xs font-medium border"
+              style={{
+                background: filter === f ? 'var(--pine)' : 'transparent',
+                color: filter === f ? 'var(--card)' : 'var(--ink)',
+                borderColor: filter === f ? 'var(--pine)' : 'var(--line)',
+              }}
+            >
+              {f === 'all' ? `All (${options.length})` : STATUS_LABELS[f]}
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? (
-        <p style={{ color: 'var(--ink)' }}>Loading…</p>
+        <Loading />
       ) : options.length === 0 ? (
-        <p style={{ color: 'var(--ink)' }}>No parcels yet. Add the first one being considered.</p>
+        <EmptyState title="No parcels yet" hint="Add the first one being considered." />
+      ) : filtered.length === 0 ? (
+        <EmptyState title="Nothing in this view" hint="Try a different filter above." />
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
-          {options.map((o) => (
+          {filtered.map((o) => (
             <div key={o.id} className="rounded-lg border p-5" style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
               <div className="flex items-center justify-between mb-2">
                 <h2 className="font-display text-xl" style={{ color: 'var(--clay)' }}>{o.name}</h2>

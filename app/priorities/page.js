@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Gate from '@/components/Gate'
+import { Loading, EmptyState, ErrorState } from '@/components/Loading'
 import { useAuth } from '@/lib/AuthProvider'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -11,25 +12,35 @@ function PrioritiesPage() {
   const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
   const [isDealbreaker, setIsDealbreaker] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
 
   async function load() {
-    const { data } = await supabase
+    setLoading(true)
+    setError(null)
+    const { data, error } = await supabase
       .from('priorities')
       .select('*, members(name, household)')
       .order('created_at', { ascending: false })
-    setItems(data || [])
+    if (error) setError(error.message)
+    else setItems(data || [])
+    setLoading(false)
   }
 
   useEffect(() => { load() }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
-    await supabase.from('priorities').insert({
+    setSaving(true)
+    const { error } = await supabase.from('priorities').insert({
       member_id: member.id,
       category,
       description,
       is_dealbreaker: isDealbreaker,
     })
+    setSaving(false)
+    if (error) { setError(error.message); return }
     setCategory(''); setDescription(''); setIsDealbreaker(false)
     load()
   }
@@ -40,13 +51,19 @@ function PrioritiesPage() {
     acc[key].push(i)
     return acc
   }, {})
+  const dealbreakerCount = items.filter((i) => i.is_dealbreaker).length
 
   return (
     <div>
       <h1 className="font-display text-3xl mb-2" style={{ color: 'var(--pine-dark)' }}>Priorities & dealbreakers</h1>
       <p className="text-sm mb-6" style={{ color: 'var(--ink)' }}>
-        Everyone sees everyone else's — this is how conflicts surface early instead of at closing.
+        Everyone sees everyone else&apos;s — this is how conflicts surface early instead of at closing.
+        {!loading && items.length > 0 && (
+          <span> <strong style={{ color: 'var(--clay)' }}>{dealbreakerCount}</strong> dealbreaker{dealbreakerCount === 1 ? '' : 's'} logged so far.</span>
+        )}
       </p>
+
+      {error && <div className="mb-6"><ErrorState message={error} /></div>}
 
       <form onSubmit={handleSubmit} className="rounded-lg border p-5 mb-8 grid sm:grid-cols-4 gap-3 items-end" style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
         <div>
@@ -61,13 +78,15 @@ function PrioritiesPage() {
           <input type="checkbox" checked={isDealbreaker} onChange={(e) => setIsDealbreaker(e.target.checked)} id="db" />
           <label htmlFor="db" className="text-sm">Dealbreaker</label>
         </div>
-        <button type="submit" className="rounded px-4 py-2 font-medium sm:col-span-4 justify-self-start" style={{ background: 'var(--clay)', color: 'var(--card)' }}>
-          Add
+        <button type="submit" disabled={saving} className="rounded px-4 py-2 font-medium sm:col-span-4 justify-self-start" style={{ background: 'var(--clay)', color: 'var(--card)' }}>
+          {saving ? 'Adding…' : 'Add'}
         </button>
       </form>
 
-      {Object.keys(grouped).length === 0 ? (
-        <p style={{ color: 'var(--ink)' }}>Nobody's added their priorities yet.</p>
+      {loading ? (
+        <Loading />
+      ) : Object.keys(grouped).length === 0 ? (
+        <EmptyState title="Nobody's added their priorities yet" hint="Be the first — add what matters most to you above." />
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
           {Object.entries(grouped).map(([name, list]) => (

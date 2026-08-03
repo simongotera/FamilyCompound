@@ -18,19 +18,23 @@ export default function Nav() {
   const { member, signOut } = useAuth()
 
   return (
-    <header className="border-b" style={{ borderColor: 'var(--line)' }}>
+    <header
+      className="sticky top-0 z-10 border-b backdrop-blur"
+      style={{ borderColor: 'var(--line)', background: 'color-mix(in srgb, var(--paper) 92%, transparent)' }}
+    >
       <div className="max-w-5xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-        <Link href="/" className="font-display text-2xl" style={{ color: 'var(--pine-dark)' }}>
+        <Link href="/" className="font-display text-2xl shrink-0" style={{ color: 'var(--pine-dark)' }}>
           The Compound
         </Link>
-        <nav className="flex flex-wrap gap-1">
+        <nav className="flex flex-wrap gap-1" aria-label="Main">
           {links.map((l) => {
             const active = pathname === l.href
             return (
               <Link
                 key={l.href}
                 href={l.href}
-                className="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+                aria-current={active ? 'page' : undefined}
+                className="px-3 py-1.5 rounded-full text-sm font-medium"
                 style={{
                   background: active ? 'var(--pine)' : 'transparent',
                   color: active ? 'var(--card)' : 'var(--ink)',
@@ -42,7 +46,14 @@ export default function Nav() {
           })}
         </nav>
         <div className="flex items-center gap-3 text-sm">
-          {member && <span style={{ color: 'var(--pine-dark)' }}>{member.name}</span>}
+          {member && (
+            <span style={{ color: 'var(--pine-dark)' }}>
+              {member.name}
+              {member.household && (
+                <span className="hidden sm:inline" style={{ color: 'var(--ink)' }}> · {member.household}</span>
+              )}
+            </span>
+          )}
           <button
             onClick={signOut}
             className="underline decoration-dotted underline-offset-4"
