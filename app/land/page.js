@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Gate from '@/components/Gate'
 import { Loading, EmptyState, ErrorState } from '@/components/Loading'
+import { DeleteButton } from '@/components/DeleteButton'
 import { useAuth } from '@/lib/AuthProvider'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -55,22 +56,32 @@ function LandPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
-    const { error } = await supabase.from('land_options').insert({
-      ...form,
-      acreage: form.acreage ? Number(form.acreage) : null,
-      price: form.price ? Number(form.price) : null,
-      added_by: member.id,
-    })
+    const { data, error } = await supabase
+      .from('land_options')
+      .insert({
+        ...form,
+        acreage: form.acreage ? Number(form.acreage) : null,
+        price: form.price ? Number(form.price) : null,
+        added_by: member.id,
+      })
+      .select()
+      .single()
     setSaving(false)
     if (error) { setError(error.message); return }
+    setOptions((prev) => [data, ...prev])
     setForm(emptyForm())
     setShowForm(false)
-    load()
   }
 
   async function updateStatus(id, status) {
     setOptions((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)))
     const { error } = await supabase.from('land_options').update({ status }).eq('id', id)
+    if (error) { setError(error.message); load() }
+  }
+
+  async function handleDelete(id) {
+    setOptions((prev) => prev.filter((o) => o.id !== id))
+    const { error } = await supabase.from('land_options').delete().eq('id', id)
     if (error) { setError(error.message); load() }
   }
 
@@ -170,6 +181,11 @@ function LandPage() {
                 <a href={o.listing_url} target="_blank" rel="noreferrer" className="text-sm underline block mt-2" style={{ color: 'var(--pine)' }}>
                   View listing
                 </a>
+              )}
+              {o.added_by === member.id && (
+                <div className="mt-3 pt-3 border-t flex justify-end" style={{ borderColor: 'var(--line)' }}>
+                  <DeleteButton onDelete={() => handleDelete(o.id)} label="Delete parcel" confirmText={`Delete "${o.name}"? This can't be undone.`} />
+                </div>
               )}
             </div>
           ))}

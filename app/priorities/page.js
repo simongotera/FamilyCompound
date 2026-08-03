@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Gate from '@/components/Gate'
 import { Loading, EmptyState, ErrorState } from '@/components/Loading'
+import { DeleteButton } from '@/components/DeleteButton'
 import { useAuth } from '@/lib/AuthProvider'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -33,16 +34,26 @@ function PrioritiesPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
-    const { error } = await supabase.from('priorities').insert({
-      member_id: member.id,
-      category,
-      description,
-      is_dealbreaker: isDealbreaker,
-    })
+    const { data, error } = await supabase
+      .from('priorities')
+      .insert({
+        member_id: member.id,
+        category,
+        description,
+        is_dealbreaker: isDealbreaker,
+      })
+      .select('*, members(name, household)')
+      .single()
     setSaving(false)
     if (error) { setError(error.message); return }
+    setItems((prev) => [data, ...prev])
     setCategory(''); setDescription(''); setIsDealbreaker(false)
-    load()
+  }
+
+  async function handleDelete(id) {
+    setItems((prev) => prev.filter((i) => i.id !== id))
+    const { error } = await supabase.from('priorities').delete().eq('id', id)
+    if (error) { setError(error.message); load() }
   }
 
   const grouped = items.reduce((acc, i) => {
@@ -94,10 +105,15 @@ function PrioritiesPage() {
               <h2 className="font-display text-xl mb-2" style={{ color: 'var(--clay)' }}>{name}</h2>
               <ul className="space-y-2">
                 {list.map((i) => (
-                  <li key={i.id} className="text-sm">
-                    {i.is_dealbreaker && <span className="text-xs font-semibold uppercase mr-2" style={{ color: 'var(--clay)' }}>Dealbreaker</span>}
-                    {i.category && <span className="italic mr-1">[{i.category}]</span>}
-                    {i.description}
+                  <li key={i.id} className="text-sm flex items-start justify-between gap-2">
+                    <span>
+                      {i.is_dealbreaker && <span className="text-xs font-semibold uppercase mr-2" style={{ color: 'var(--clay)' }}>Dealbreaker</span>}
+                      {i.category && <span className="italic mr-1">[{i.category}]</span>}
+                      {i.description}
+                    </span>
+                    {i.member_id === member.id && (
+                      <DeleteButton onDelete={() => handleDelete(i.id)} confirmText="Delete this priority?" />
+                    )}
                   </li>
                 ))}
               </ul>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Gate from '@/components/Gate'
 import { Loading, EmptyState, ErrorState } from '@/components/Loading'
+import { DeleteButton } from '@/components/DeleteButton'
 import { useAuth } from '@/lib/AuthProvider'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -32,15 +33,25 @@ function BudgetPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
-    const { error } = await supabase.from('budget_contributions').insert({
-      member_id: member.id,
-      amount: Number(amount),
-      notes,
-    })
+    const { data, error } = await supabase
+      .from('budget_contributions')
+      .insert({
+        member_id: member.id,
+        amount: Number(amount),
+        notes,
+      })
+      .select('*, members(name, household)')
+      .single()
     setSaving(false)
     if (error) { setError(error.message); return }
+    setItems((prev) => [data, ...prev])
     setAmount(''); setNotes('')
-    load()
+  }
+
+  async function handleDelete(id) {
+    setItems((prev) => prev.filter((i) => i.id !== id))
+    const { error } = await supabase.from('budget_contributions').delete().eq('id', id)
+    if (error) { setError(error.message); load() }
   }
 
   const total = items.reduce((sum, i) => sum + Number(i.amount), 0)
@@ -107,9 +118,12 @@ function BudgetPage() {
           ) : (
             <ul className="space-y-1 text-sm">
               {items.map((i) => (
-                <li key={i.id} className="flex justify-between border-b pb-1" style={{ borderColor: 'var(--line)' }}>
+                <li key={i.id} className="flex justify-between items-center border-b pb-1 gap-2" style={{ borderColor: 'var(--line)' }}>
                   <span>{i.members?.name} {i.notes && `— ${i.notes}`}</span>
-                  <span>${Number(i.amount).toLocaleString()}</span>
+                  <span className="flex items-center gap-3 shrink-0">
+                    ${Number(i.amount).toLocaleString()}
+                    {i.member_id === member.id && <DeleteButton onDelete={() => handleDelete(i.id)} confirmText="Delete this contribution?" />}
+                  </span>
                 </li>
               ))}
             </ul>

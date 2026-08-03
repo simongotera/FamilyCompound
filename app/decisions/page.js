@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Gate from '@/components/Gate'
 import { Loading, EmptyState, ErrorState } from '@/components/Loading'
+import { DeleteButton } from '@/components/DeleteButton'
 import { useAuth } from '@/lib/AuthProvider'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -32,11 +33,21 @@ function DecisionsPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
-    const { error } = await supabase.from('decisions').insert({ title, description, decided_by: member.id })
+    const { data, error } = await supabase
+      .from('decisions')
+      .insert({ title, description, decided_by: member.id })
+      .select('*, members(name)')
+      .single()
     setSaving(false)
     if (error) { setError(error.message); return }
+    setItems((prev) => [data, ...prev])
     setTitle(''); setDescription('')
-    load()
+  }
+
+  async function handleDelete(id) {
+    setItems((prev) => prev.filter((d) => d.id !== id))
+    const { error } = await supabase.from('decisions').delete().eq('id', id)
+    if (error) { setError(error.message); load() }
   }
 
   return (
@@ -66,13 +77,18 @@ function DecisionsPage() {
       <ul className="space-y-4">
         {items.map((d) => (
           <li key={d.id} className="rounded-lg border p-4" style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
-            <div className="flex justify-between items-baseline">
+            <div className="flex justify-between items-baseline gap-2">
               <h3 className="font-display text-lg" style={{ color: 'var(--clay)' }}>{d.title}</h3>
-              <span className="text-xs" style={{ color: 'var(--ink)' }}>
+              <span className="text-xs shrink-0" style={{ color: 'var(--ink)' }}>
                 {d.members?.name} · {new Date(d.created_at).toLocaleDateString()}
               </span>
             </div>
             {d.description && <p className="text-sm mt-1">{d.description}</p>}
+            {d.decided_by === member.id && (
+              <div className="mt-2 flex justify-end">
+                <DeleteButton onDelete={() => handleDelete(d.id)} confirmText="Delete this decision?" />
+              </div>
+            )}
           </li>
         ))}
       </ul>

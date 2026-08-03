@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Gate from '@/components/Gate'
 import { Loading, ErrorState } from '@/components/Loading'
+import { DeleteButton } from '@/components/DeleteButton'
 import { useAuth } from '@/lib/AuthProvider'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -11,6 +12,15 @@ const STATUS_LABEL = { open: 'Open', in_progress: 'In progress', done: 'Done' }
 
 function isOverdue(t) {
   return t.due_date && t.status !== 'done' && new Date(t.due_date) < new Date(new Date().toDateString())
+}
+
+function sortByDueDate(list) {
+  return [...list].sort((a, b) => {
+    if (!a.due_date && !b.due_date) return 0
+    if (!a.due_date) return 1
+    if (!b.due_date) return -1
+    return new Date(a.due_date) - new Date(b.due_date)
+  })
 }
 
 function TasksPage() {
@@ -39,21 +49,31 @@ function TasksPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
-    const { error } = await supabase.from('tasks').insert({
-      title,
-      due_date: dueDate || null,
-      owner_id: member.id,
-      status: 'open',
-    })
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        title,
+        due_date: dueDate || null,
+        owner_id: member.id,
+        status: 'open',
+      })
+      .select('*, members(name)')
+      .single()
     setSaving(false)
     if (error) { setError(error.message); return }
+    setTasks((prev) => sortByDueDate([data, ...prev]))
     setTitle(''); setDueDate('')
-    load()
   }
 
   async function updateStatus(id, status) {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)))
     const { error } = await supabase.from('tasks').update({ status }).eq('id', id)
+    if (error) { setError(error.message); load() }
+  }
+
+  async function handleDelete(id) {
+    setTasks((prev) => prev.filter((t) => t.id !== id))
+    const { error } = await supabase.from('tasks').delete().eq('id', id)
     if (error) { setError(error.message); load() }
   }
 
@@ -100,14 +120,19 @@ function TasksPage() {
                         <div className="text-xs mt-1" style={{ color: isOverdue(t) ? 'var(--clay)' : 'var(--ink)' }}>
                           {t.members?.name}{t.due_date && ` · due ${new Date(t.due_date).toLocaleDateString()}`}{isOverdue(t) && ' · overdue'}
                         </div>
-                        <select
-                          value={t.status}
-                          onChange={(e) => updateStatus(t.id, e.target.value)}
-                          className="text-xs mt-2 border rounded px-2 py-1 bg-white"
-                          style={{ borderColor: 'var(--line)' }}
-                        >
-                          {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-                        </select>
+                        <div className="flex items-center justify-between gap-2 mt-2">
+                          <select
+                            value={t.status}
+                            onChange={(e) => updateStatus(t.id, e.target.value)}
+                            className="text-xs border rounded px-2 py-1 bg-white"
+                            style={{ borderColor: 'var(--line)' }}
+                          >
+                            {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+                          </select>
+                          {t.owner_id === member.id && (
+                            <DeleteButton onDelete={() => handleDelete(t.id)} confirmText="Delete this task?" />
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ul>
