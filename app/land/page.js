@@ -1,12 +1,15 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import Gate from '@/components/Gate'
 import { Loading, EmptyState, ErrorState } from '@/components/Loading'
 import { DeleteButton } from '@/components/DeleteButton'
 import { useAuth } from '@/lib/AuthProvider'
 import { useLocale } from '@/lib/i18n/LocaleProvider'
 import { supabase } from '@/lib/supabaseClient'
+
+const COUNTRY_SELECT = 'name, flag_emoji, clear_path_citizenship, retiree_pathway, property_purchase_difficulty, healthcare_system'
 
 const STATUS_COLORS = {
   considering: 'var(--ink)',
@@ -21,7 +24,7 @@ const FILTERS = ['all', 'considering', 'favorite', 'offer_made', 'purchased', 'r
 function emptyForm() {
   return {
     name: '', location: '', acreage: '', price: '', water_source: '',
-    zoning: '', utilities: '', pros: '', cons: '', listing_url: '', status: 'considering',
+    zoning: '', utilities: '', pros: '', cons: '', listing_url: '', status: 'considering', country_id: '',
   }
 }
 
@@ -29,6 +32,7 @@ function LandPage() {
   const { member } = useAuth()
   const { t } = useLocale()
   const [options, setOptions] = useState([])
+  const [countries, setCountries] = useState([])
   const [form, setForm] = useState(emptyForm())
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -47,9 +51,13 @@ function LandPage() {
   async function load() {
     setLoading(true)
     setError(null)
-    const { data, error } = await supabase.from('land_options').select('*').order('created_at', { ascending: false })
-    if (error) setError(error.message)
-    else setOptions(data || [])
+    const [optionsRes, countriesRes] = await Promise.all([
+      supabase.from('land_options').select(`*, countries(${COUNTRY_SELECT})`).order('created_at', { ascending: false }),
+      supabase.from('countries').select('id, name, flag_emoji').order('name', { ascending: true }),
+    ])
+    if (optionsRes.error) setError(optionsRes.error.message)
+    else setOptions(optionsRes.data || [])
+    setCountries(countriesRes.data || [])
     setLoading(false)
   }
 
@@ -64,9 +72,10 @@ function LandPage() {
         ...form,
         acreage: form.acreage ? Number(form.acreage) : null,
         price: form.price ? Number(form.price) : null,
+        country_id: form.country_id || null,
         added_by: member.id,
       })
-      .select()
+      .select(`*, countries(${COUNTRY_SELECT})`)
       .single()
     setSaving(false)
     if (error) { setError(error.message); return }
@@ -117,6 +126,20 @@ function LandPage() {
           <Input label={t('land.zoningLabel')} value={form.zoning} onChange={(v) => setForm({ ...form, zoning: v })} />
           <Input label={t('land.utilitiesLabel')} value={form.utilities} onChange={(v) => setForm({ ...form, utilities: v })} />
           <Input label={t('land.listingUrlLabel')} value={form.listing_url} onChange={(v) => setForm({ ...form, listing_url: v })} />
+          <div>
+            <label className="text-xs uppercase tracking-wide block mb-1" style={{ color: 'var(--pine-dark)' }}>{t('land.countryLabel')}</label>
+            <select
+              value={form.country_id}
+              onChange={(e) => setForm({ ...form, country_id: e.target.value })}
+              className="w-full border rounded px-3 py-2 bg-white"
+              style={{ borderColor: 'var(--line)' }}
+            >
+              <option value="">{t('land.countryNone')}</option>
+              {countries.map((c) => (
+                <option key={c.id} value={c.id}>{c.flag_emoji ? `${c.flag_emoji} ` : ''}{c.name}</option>
+              ))}
+            </select>
+          </div>
           <Textarea label={t('land.prosLabel')} value={form.pros} onChange={(v) => setForm({ ...form, pros: v })} />
           <Textarea label={t('land.consLabel')} value={form.cons} onChange={(v) => setForm({ ...form, cons: v })} />
           <div className="sm:col-span-2">
@@ -174,6 +197,29 @@ function LandPage() {
               <p className="text-sm mb-2" style={{ color: 'var(--ink)' }}>
                 {o.location} {o.acreage ? `· ${o.acreage} ${t('land.acres')}` : ''} {o.price ? `· $${Number(o.price).toLocaleString()}` : ''}
               </p>
+              {o.countries && (
+                <div className="rounded-lg border p-3 mb-2" style={{ background: 'var(--paper)', borderColor: 'var(--line)' }}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium">
+                      {o.countries.flag_emoji && <span aria-hidden>{o.countries.flag_emoji} </span>}
+                      {o.countries.name}
+                    </span>
+                    <Link href="/countries" className="text-xs underline shrink-0" style={{ color: 'var(--pine)' }}>{t('land.viewCountryProfile')}</Link>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-1.5">
+                    {o.countries.clear_path_citizenship && (
+                      <span className="text-xs rounded-full px-2 py-0.5 border" style={{ borderColor: 'var(--line)' }}>
+                        {t('countries.field.clear_path_citizenship')}: {t(`countries.enum.clear_path_citizenship.${o.countries.clear_path_citizenship}`)}
+                      </span>
+                    )}
+                    {o.countries.property_purchase_difficulty && (
+                      <span className="text-xs rounded-full px-2 py-0.5 border" style={{ borderColor: 'var(--line)' }}>
+                        {t('countries.field.property_purchase_difficulty')}: {t(`countries.enum.property_purchase_difficulty.${o.countries.property_purchase_difficulty}`)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
               {o.water_source && <p className="text-sm"><strong>{t('land.waterLabel')}</strong> {o.water_source}</p>}
               {o.zoning && <p className="text-sm"><strong>{t('land.zoningFieldLabel')}</strong> {o.zoning}</p>}
               {o.utilities && <p className="text-sm mb-2"><strong>{t('land.utilitiesFieldLabel')}</strong> {o.utilities}</p>}

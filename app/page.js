@@ -23,6 +23,7 @@ function Dashboard() {
 
   const cards = [
     { href: '/land', label: t('dashboard.cardLandLabel'), desc: t('dashboard.cardLandDesc') },
+    { href: '/countries', label: t('dashboard.cardCountriesLabel'), desc: t('dashboard.cardCountriesDesc') },
     { href: '/priorities', label: t('dashboard.cardPrioritiesLabel'), desc: t('dashboard.cardPrioritiesDesc') },
     { href: '/budget', label: t('dashboard.cardBudgetLabel'), desc: t('dashboard.cardBudgetDesc') },
     { href: '/decisions', label: t('dashboard.cardDecisionsLabel'), desc: t('dashboard.cardDecisionsDesc') },
@@ -33,8 +34,9 @@ function Dashboard() {
     let cancelled = false
     async function load() {
       setError(null)
-      const [land, priorities, budget, decisions, tasks, upNextRes, latestDecisionRes, favoriteRes] = await Promise.all([
+      const [land, countries, priorities, budget, decisions, tasks, upNextRes, latestDecisionRes, favoriteRes] = await Promise.all([
         supabase.from('land_options').select('id', { count: 'exact', head: true }),
+        supabase.from('countries').select('id', { count: 'exact', head: true }),
         supabase.from('priorities').select('id', { count: 'exact', head: true }),
         supabase.from('budget_contributions').select('amount'),
         supabase.from('decisions').select('id', { count: 'exact', head: true }),
@@ -46,7 +48,7 @@ function Dashboard() {
 
       if (cancelled) return
 
-      const firstError = [land, priorities, budget, decisions, tasks, upNextRes, latestDecisionRes, favoriteRes]
+      const firstError = [land, countries, priorities, budget, decisions, tasks, upNextRes, latestDecisionRes, favoriteRes]
         .find((r) => r.error)?.error
       if (firstError) {
         setError(firstError.message)
@@ -56,6 +58,7 @@ function Dashboard() {
       const total = (budget.data || []).reduce((sum, b) => sum + Number(b.amount), 0)
       setStats({
         land: land.count || 0,
+        countries: countries.count || 0,
         priorities: priorities.count || 0,
         budget: total,
         decisions: decisions.count || 0,
@@ -101,8 +104,9 @@ function Dashboard() {
       )}
 
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-6">
           <Stat label={t('dashboard.statLand')} value={stats.land} />
+          <Stat label={t('dashboard.statCountries')} value={stats.countries} />
           <Stat label={t('dashboard.statPriorities')} value={stats.priorities} />
           <Stat label={t('dashboard.statBudget')} value={`$${stats.budget.toLocaleString()}`} />
           <Stat label={t('dashboard.statDecisions')} value={stats.decisions} />
