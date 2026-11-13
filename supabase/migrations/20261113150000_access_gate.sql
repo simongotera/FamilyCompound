@@ -33,7 +33,9 @@ create table public.waitlist (
   note text check (char_length(note) <= 500),
   created_at timestamptz not null default now()
 );
-create unique index waitlist_email_key on public.waitlist (lower(email));
+-- A plain unique constraint, not a unique index on lower(email): ON CONFLICT cannot use an
+-- expression index, and the edge function always lowercases before writing.
+alter table public.waitlist add constraint waitlist_email_key unique (email);
 
 -- Emails Simon has approved up front. Matching one gets you in with no code.
 create table public.allowed_emails (
@@ -90,7 +92,9 @@ create table public.invites (
   created_at timestamptz not null default now(),
   consumed_at timestamptz
 );
-create unique index invites_email_key on public.invites (lower(email)) where consumed_at is null;
+-- Likewise plain, and not partial: a partial index is no good as a conflict target either.
+-- One invite row per email; re-granting access resets consumed_at.
+alter table public.invites add constraint invites_email_key unique (email);
 
 -- ---------- lock everything down ----------
 alter table public.waitlist enable row level security;
@@ -106,6 +110,19 @@ revoke all on public.waitlist, public.allowed_emails, public.access_codes,
 
 -- The one exception: a visitor may put their email on the waitlist, and read nothing back.
 grant insert on public.waitlist to anon, authenticated;
+
+-- The edge function's service role. access_codes and invite_links are deliberately absent:
+-- they are only ever reached through SECURITY DEFINER functions, so even a compromised edge
+-- function cannot read a hash or mint a code. bigserial also needs its sequence.
+grant select, insert on public.waitlist to service_role;
+grant select on public.allowed_emails to service_role;
+grant insert on public.access_attempts to service_role;
+grant usage on sequence public.access_attempts_id_seq to service_role;
+grant select, insert, update on public.invites to service_role;
+grant select on public.members to service_role;
+grant execute on function public.access_rate_limited(text, inet) to service_role;
+grant execute on function public.verify_access_code(text) to service_role;
+grant execute on function public.verify_invite_token(text, text) to service_role;
 create policy "anyone may join the waitlist" on public.waitlist
   for insert to anon, authenticated with check (true);
 

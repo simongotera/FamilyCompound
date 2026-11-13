@@ -57,15 +57,29 @@ Deno.serve(async (req) => {
   const code = typeof body.code === 'string' ? body.code : null
   const token = typeof body.token === 'string' ? body.token : null
 
-  const log = (outcome: string) =>
-    admin.from('access_attempts').insert({ email, ip, outcome }).then(() => {})
+  // The rate limit is computed from this table, so a failed write is a security problem,
+  // not a cosmetic one. It must never be ignored. (It was, once — the gate looked healthy
+  // while logging nothing and rate-limiting nobody.)
+  const log = async (outcome: string) => {
+    const { error } = await admin.from('access_attempts').insert({ email, ip, outcome })
+    if (error) {
+      console.error('access_attempts insert failed', error.message)
+      return false
+    }
+    return true
+  }
 
   // ---- notify-me: store and reveal nothing ----
   if (action === 'notify') {
     const note = typeof body.note === 'string' ? body.note.slice(0, 500) : null
     // A repeat signup is not an error and must not be reported as one, or the waitlist
-    // becomes an email-existence oracle.
-    await admin.from('waitlist').upsert({ email, note }, { onConflict: 'email', ignoreDuplicates: true })
+    // becomes an email-existence oracle. Any other failure is real and must surface.
+    const { error } = await admin
+      .from('waitlist').upsert({ email, note }, { onConflict: 'email', ignoreDuplicates: true })
+    if (error) {
+      console.error('waitlist upsert failed', error.message)
+      return json({ ok: false, error: 'serverError' }, 500)
+    }
     await log('waitlisted')
     return json({ ok: true, message: 'waitlisted' })
   }
@@ -119,8 +133,10 @@ Deno.serve(async (req) => {
 
   // ---- grant: record the invite, make sure the auth user exists ----
   if (familyId) {
+    // consumed_at is reset explicitly: without it, re-granting access to someone whose
+    // earlier invite was already claimed would leave them unable to join.
     const { error } = await admin.from('invites').upsert(
-      { email, family_id: familyId },
+      { email, family_id: familyId, consumed_at: null },
       { onConflict: 'email', ignoreDuplicates: false },
     )
     if (error) return json({ ok: false, error: 'serverError' }, 500)
@@ -133,6 +149,9 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: 'serverError' }, 500)
   }
 
-  await log(outcome)
+  if (!(await log(outcome))) {
+    // Refuse rather than grant access we cannot account for.
+    return json({ ok: false, error: 'serverError' }, 500)
+  }
   return json(NEUTRAL)
 })
