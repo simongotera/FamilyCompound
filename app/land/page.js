@@ -49,8 +49,7 @@ function LandPage() {
   }
 
   async function load() {
-    setLoading(true)
-    setError(null)
+    // Initial state is already loading; reloads only follow a failed write, whose error should stay visible.
     const [optionsRes, countriesRes] = await Promise.all([
       supabase.from('land_options').select(`*, countries(${COUNTRY_SELECT})`).order('created_at', { ascending: false }),
       supabase.from('countries').select('id, name, flag_emoji').order('name', { ascending: true }),
@@ -61,7 +60,8 @@ function LandPage() {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  // Kick off the first fetch from a callback so the effect itself never sets state synchronously.
+  useEffect(() => { Promise.resolve().then(load) }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()

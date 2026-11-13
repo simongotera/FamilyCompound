@@ -20,8 +20,7 @@ function PrioritiesPage() {
   const [error, setError] = useState(null)
 
   async function load() {
-    setLoading(true)
-    setError(null)
+    // Initial state is already loading; reloads only follow a failed write, whose error should stay visible.
     const { data, error } = await supabase
       .from('priorities')
       .select('*, members(name, household)')
@@ -31,7 +30,8 @@ function PrioritiesPage() {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  // Kick off the first fetch from a callback so the effect itself never sets state synchronously.
+  useEffect(() => { Promise.resolve().then(load) }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()

@@ -36,8 +36,7 @@ function CountriesPage() {
   const [filters, setFilters] = useState({})
 
   async function load() {
-    setLoading(true)
-    setError(null)
+    // Initial state is already loading; reloads only follow a failed write, whose error should stay visible.
     const [countriesRes, parcelsRes] = await Promise.all([
       supabase.from('countries').select('*').order('name', { ascending: true }),
       supabase.from('land_options').select('id, name, country_id').not('country_id', 'is', null),
@@ -53,7 +52,8 @@ function CountriesPage() {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  // Kick off the first fetch from a callback so the effect itself never sets state synchronously.
+  useEffect(() => { Promise.resolve().then(load) }, [])
 
   function fieldLabel(name) {
     return t(`countries.field.${name}`)
