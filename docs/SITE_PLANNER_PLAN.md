@@ -271,12 +271,30 @@ actually enjoy using it. Phase 5 only happens if we want to share it.
 
 ---
 
-## A tiny clickable prototype?
+## The tiny clickable prototype — built
 
-Cheap and worth it: a single static page with a fixed example parcel, three draggable
-rectangles, one orchard polygon, a zone overlay toggle and a sun-angle slider — no database, no
-auth, just enough to feel whether the interaction is right and whether it looks like The
-Compound. Roughly half a day. It is **not** built yet; say the word and it'll be the first thing.
+It exists now, at **`/site-planner-prototype`** (deliberately not in the nav):
+[app/site-planner-prototype/page.js](../app/site-planner-prototype/page.js).
+
+A fixed example parcel with three draggable buildings, a draggable orchard polygon and pond, a
+permaculture-zone overlay, and a time-of-day slider with a midsummer/midwinter toggle that casts
+shadows from the buildings. Areas are computed from the geometry (shoelace formula). No
+database, no auth, no saving — reload and it resets.
+
+What it was built to answer:
+
+- **Does dragging in plain SVG feel good enough?** Yes. Pointer events with pointer capture,
+  snapping to the metre, about 40 lines. This was the main schedule risk in Phase 1 and it is
+  smaller than feared.
+- **Does it look like The Compound?** Yes — it uses the same CSS variables and fonts, no styling
+  fight, which is the thing a map stack would have cost us.
+- **Is the sun overlay the convincing feature?** Yes. Dragging a house and watching the midwinter
+  afternoon shadow fall across the garden makes a siting argument concrete in a way a list never
+  will. Worth moving earlier than Phase 4.
+
+The sun model is crude on purpose — flat ground, 6 m walls, a generic latitude — and the page
+says so on screen. The real version would use the site's own latitude and a proper
+solar-position library.
 
 ---
 
