@@ -499,7 +499,14 @@
       "groupWeights": "Pesos del grupo",
       "disagreement": "Mayores desacuerdos",
       "needTwoPeople": "Cuando una segunda persona haga el cuestionario, los desacuerdos aparecen aquí.",
-      "inconsistentPeople": "Respuestas cara a cara inconsistentes (razón de consistencia mayor a 0.10): {{list}}. Sus pesos siguen contando; quizá quieran repetir ese paso."
+      "inconsistentPeople": "Respuestas cara a cara inconsistentes (razón de consistencia mayor a 0.10): {{list}}. Sus pesos siguen contando; quizá quieran repetir ese paso.",
+      "candidatesTitle": "Vale la pena investigar",
+      "candidatesHint": "Países que nadie ha perfilado todavía, puntuados según sus prioridades a partir de una lista de referencia corta. Son puntos de partida, no conclusiones — falta saber casi todo, así que las puntuaciones son aproximadas y van aparte de la lista corta real.",
+      "notResearched": "sin investigar",
+      "toCheck": "Falta revisar: {{list}}",
+      "promote": "Crear un perfil →",
+      "promoted": "{{name}} se agregó a Perfiles de países, con la lista de lo que falta revisar.",
+      "ifUnknownsAverage": "si lo desconocido sale promedio"
     },
     "facts": {
       "title": "Investigación y datos",

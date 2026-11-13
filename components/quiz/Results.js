@@ -13,11 +13,11 @@ function scoreText(score) {
   return score == null ? '—' : score.toFixed(0)
 }
 
-export default function Results({ result, matrix, onOpenFacts }) {
+export default function Results({ result, matrix, onOpenFacts, onPromote, promoting }) {
   const { t } = useLocale()
   const [openKey, setOpenKey] = useState(null)
   const name = (id) => t(`quiz.criteria.${id}.name`)
-  const { ranked, excluded, sensitivity: sens, agreement, persons, groupWeights, personalRanks } = result
+  const { ranked, candidates = [], excluded, sensitivity: sens, agreement, persons, groupWeights, personalRanks } = result
 
   const scored = ranked.filter((r) => r.score != null)
   const unscored = ranked.filter((r) => r.score == null)
@@ -121,6 +121,58 @@ export default function Results({ result, matrix, onOpenFacts }) {
           </Card>
         )}
       </section>
+
+      {candidates.length > 0 && (
+        <section>
+          <SectionTitle hint={t('quiz.results.candidatesHint')}>{t('quiz.results.candidatesTitle')}</SectionTitle>
+          <ol className="space-y-3">
+            {candidates.filter((c) => c.midpoint != null).slice(0, 6).map((c) => (
+              <li key={c.key}>
+                <Card className="border-dashed">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <h3 className="font-display text-lg" style={{ color: 'var(--pine-dark)' }}>
+                        {c.flag ? `${c.flag} ` : ''}{c.name}
+                        <span className="text-xs font-sans ml-2 px-2 py-0.5 rounded-full border" style={{ borderColor: 'var(--clay)', color: 'var(--clay)' }}>
+                          {t('quiz.results.notResearched')}
+                        </span>
+                      </h3>
+                      <p className="text-xs mb-2" style={{ color: 'var(--ink)' }}>
+                        {t('quiz.results.coverage', { pct: pct(c.coverage) })}
+                        {' · '}
+                        {t('quiz.results.range', { low: scoreText(c.low), high: scoreText(c.high) })}
+                      </p>
+                      <div>
+                        {c.why.strengths.map((x) => <Pill key={`cs${x.id}`} tone="pine">↑ {name(x.id)}</Pill>)}
+                        {c.why.weaknesses.map((x) => <Pill key={`cw${x.id}`} tone="clay">↓ {name(x.id)}</Pill>)}
+                      </div>
+                      {c.verify?.length > 0 && (
+                        <p className="text-xs mt-2" style={{ color: 'var(--ink)' }}>
+                          {t('quiz.results.toCheck', { list: c.verify.join(', ') })}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="font-display text-2xl tabular-nums" style={{ color: 'var(--clay)' }}>~{scoreText(c.midpoint)}</div>
+                      <div className="text-xs" style={{ color: 'var(--ink)' }}>{t('quiz.results.ifUnknownsAverage')}</div>
+                      {onPromote && (
+                        <button
+                          type="button" disabled={promoting}
+                          onClick={() => onPromote(c.name)}
+                          className="text-xs underline decoration-dotted underline-offset-4 mt-2 block w-full text-right"
+                          style={{ color: 'var(--pine)' }}
+                        >
+                          {t('quiz.results.promote')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {excluded.length > 0 && (
         <section>

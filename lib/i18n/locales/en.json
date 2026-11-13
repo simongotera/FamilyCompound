@@ -499,7 +499,14 @@
       "groupWeights": "Group weights",
       "disagreement": "Biggest disagreements",
       "needTwoPeople": "Once a second person takes the quiz, disagreements show up here.",
-      "inconsistentPeople": "Inconsistent pairwise answers (consistency ratio over 0.10): {{list}}. Their weights still count; they may want to redo the head-to-head step."
+      "inconsistentPeople": "Inconsistent pairwise answers (consistency ratio over 0.10): {{list}}. Their weights still count; they may want to redo the head-to-head step.",
+      "candidatesTitle": "Worth researching next",
+      "candidatesHint": "Countries nobody has profiled yet, scored against your priorities from a short reference list. These are starting points, not findings — most of what matters is still unknown, so the scores are rough and shown apart from the real shortlist.",
+      "notResearched": "not researched",
+      "toCheck": "Still to check: {{list}}",
+      "promote": "Start a profile →",
+      "promoted": "Added {{name}} to Country Profiles, with a list of what still needs checking.",
+      "ifUnknownsAverage": "if the unknowns average out"
     },
     "facts": {
       "title": "Research & data",

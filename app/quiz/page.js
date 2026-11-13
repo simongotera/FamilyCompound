@@ -7,6 +7,8 @@ import { DeleteButton } from '@/components/DeleteButton'
 import { useAuth } from '@/lib/AuthProvider'
 import { useLocale } from '@/lib/i18n/LocaleProvider'
 import { buildDataMatrix, runQuiz } from '@/lib/quiz/engine'
+import { REFERENCE_COUNTRIES, draftProfileFrom } from '@/lib/quiz/referenceCountries'
+import { supabase } from '@/lib/supabaseClient'
 import { loadQuizData, rowToResponse, saveResponse, addFact, deleteFact, saveShortlist, deleteShortlist } from '@/lib/quiz/store'
 import Wizard from '@/components/quiz/Wizard'
 import Results from '@/components/quiz/Results'
@@ -37,7 +39,11 @@ function QuizPage() {
   useEffect(() => { Promise.resolve().then(load) }, [load])
 
   const matrix = useMemo(
-    () => (data ? buildDataMatrix({ scope, countries: data.countries, parcels: data.parcels, facts: data.facts }) : null),
+    () => (data ? buildDataMatrix({
+      scope, countries: data.countries, parcels: data.parcels, facts: data.facts,
+      // Suggest places nobody has profiled yet, scored provisionally and shown apart.
+      includeReference: scope === 'countries',
+    }) : null),
     [data, scope]
   )
 
@@ -107,6 +113,23 @@ function QuizPage() {
     setData((d) => ({ ...d, shortlists: [saved, ...d.shortlists] }))
     setNotice(t('quiz.saved.saved'))
     setTab('saved')
+  }
+
+  // Turn a candidate into a real Country Profile, pre-filled with the coarse categories and a
+  // written list of what still needs checking — never with invented detail.
+  async function handlePromote(countryName) {
+    const entry = REFERENCE_COUNTRIES.find((c) => c.name === countryName)
+    if (!entry) return
+    setSaving(true)
+    const { data: created, error: err } = await supabase
+      .from('countries')
+      .insert({ ...draftProfileFrom(entry), added_by: member.id })
+      .select()
+      .single()
+    setSaving(false)
+    if (err) { setError(err.message); return }
+    setData((d) => ({ ...d, countries: [...d.countries, created].sort((a, b) => a.name.localeCompare(b.name)) }))
+    setNotice(t('quiz.results.promoted', { name: countryName }))
   }
 
   async function handleDeleteShortlist(id) {
@@ -194,7 +217,13 @@ function QuizPage() {
                 <SecondaryButton type="button" onClick={() => setTab('data')}>{t('quiz.results.addResearch')}</SecondaryButton>
               </div>
             </Card>
-            <Results result={result} matrix={matrix} onOpenFacts={() => setTab('data')} />
+            <Results
+              result={result}
+              matrix={matrix}
+              onOpenFacts={() => setTab('data')}
+              onPromote={scope === 'countries' ? handlePromote : null}
+              promoting={saving}
+            />
           </div>
         )
       )}
