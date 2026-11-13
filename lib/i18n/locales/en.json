@@ -532,5 +532,29 @@
       "deleteConfirm": "Delete this saved shortlist?",
       "flipNote": "Flips to {{newLeader}} if {{criterion}} is weighted differently."
     }
+  },
+  "gate": {
+    "tagline": "A quiet place for one family to choose where to put down roots, plant orchards, and build something together.",
+    "tabNotify": "Notify me",
+    "tabAccess": "I have access",
+    "notifyBlurb": "Not open yet. Leave your email and we'll tell you if it opens up more widely.",
+    "notePlaceholder": "Anything you'd like to say (optional)",
+    "notifyButton": "Add me to the list",
+    "accessBlurb": "If your email is already on the list, just enter it. Otherwise add the access code you were given.",
+    "inviteBlurb": "You've been invited. Enter your email and we'll send you a sign-in link.",
+    "codePlaceholder": "Access code (if you have one)",
+    "accessButton": "Send me a sign-in link",
+    "accessFootnote": "No password. We email you a link that signs you in.",
+    "sending": "Sending…",
+    "waitlistedTitle": "You're on the list",
+    "waitlistedBody": "Thanks — we've noted {{email}}. Nothing else to do for now.",
+    "checkEmailTitle": "Check your email",
+    "checkEmailBody": "If {{email}} has access, there's a sign-in link waiting. Open it on this device.",
+    "badCode": "That access code isn't right.",
+    "badInvite": "That invitation link has expired or has already been used.",
+    "tooMany": "Too many attempts. Please wait a while and try again.",
+    "badEmail": "That doesn't look like an email address.",
+    "serverError": "Something went wrong at our end. Please try again.",
+    "noInvite": "This account doesn't have an invitation yet. Ask whoever invited you to add your email."
   }
 }

@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/AuthProvider'
 import { useLocale } from '@/lib/i18n/LocaleProvider'
-import { supabase } from '@/lib/supabaseClient'
 import Nav from './Nav'
 import { LanguageToggle } from './LanguageToggle'
+import ComingSoon from './ComingSoon'
 
 function Shell({ children }) {
   return (
@@ -25,72 +25,6 @@ function Shell({ children }) {
   )
 }
 
-function LoginForm() {
-  const { t } = useLocale()
-  const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
-  const [error, setError] = useState(null)
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setError(null)
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo:
-          typeof window !== 'undefined' ? window.location.origin : undefined,
-      },
-    })
-    if (error) setError(error.message)
-    else setSent(true)
-  }
-
-  if (sent) {
-    return (
-      <div>
-        <h1 className="font-display text-2xl mb-2" style={{ color: 'var(--pine-dark)' }}>
-          {t('auth.checkEmailTitle')}
-        </h1>
-        <p className="text-sm" style={{ color: 'var(--ink)' }}>
-          {t('auth.checkEmailBody', { email })}
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <h1 className="font-display text-2xl mb-1" style={{ color: 'var(--pine-dark)' }}>
-        The Compound
-      </h1>
-      <p className="text-sm mb-6" style={{ color: 'var(--ink)' }}>
-        {t('auth.loginSubtitle')}
-      </p>
-      <input
-        type="email"
-        required
-        placeholder={t('auth.emailPlaceholder')}
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full border rounded px-3 py-2 mb-3 bg-white"
-        style={{ borderColor: 'var(--line)' }}
-      />
-      {error && (
-        <p className="text-sm mb-3" style={{ color: 'var(--clay)' }}>
-          {error}
-        </p>
-      )}
-      <button
-        type="submit"
-        className="w-full rounded py-2 font-medium"
-        style={{ background: 'var(--pine)', color: 'var(--card)' }}
-      >
-        {t('auth.sendLink')}
-      </button>
-    </form>
-  )
-}
-
 function ProfileForm() {
   const { createMemberProfile } = useAuth()
   const { t, locale } = useLocale()
@@ -101,7 +35,7 @@ function ProfileForm() {
   async function handleSubmit(e) {
     e.preventDefault()
     const { error } = await createMemberProfile(name, household, locale)
-    if (error) setError(error.message)
+    if (error) setError(error.message === 'No invitation for this account.' ? t('gate.noInvite') : error.message)
   }
 
   return (
@@ -152,7 +86,7 @@ export default function Gate({ children }) {
   const { session, member, loadingMember } = useAuth()
 
   if (session === undefined) return null // initial load
-  if (session === null) return <Shell><LoginForm /></Shell>
+  if (session === null) return <ComingSoon />
   if (loadingMember) return null
   if (!member) return <Shell><ProfileForm /></Shell>
 

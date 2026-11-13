@@ -532,5 +532,29 @@
       "deleteConfirm": "¿Eliminar esta lista guardada?",
       "flipNote": "Cambia a {{newLeader}} si {{criterion}} se pesa distinto."
     }
+  },
+  "gate": {
+    "tagline": "Un lugar tranquilo para que una familia elija dónde echar raíces, plantar huertos y construir algo en común.",
+    "tabNotify": "Avísenme",
+    "tabAccess": "Ya tengo acceso",
+    "notifyBlurb": "Todavía no está abierto. Déjanos tu correo y te avisamos si se abre a más gente.",
+    "notePlaceholder": "Algo que quieras decirnos (opcional)",
+    "notifyButton": "Agrégame a la lista",
+    "accessBlurb": "Si tu correo ya está en la lista, solo escríbelo. Si no, agrega el código de acceso que te dieron.",
+    "inviteBlurb": "Te invitaron. Escribe tu correo y te enviamos un enlace para entrar.",
+    "codePlaceholder": "Código de acceso (si tienes uno)",
+    "accessButton": "Envíenme un enlace para entrar",
+    "accessFootnote": "Sin contraseña. Te mandamos un enlace por correo que te deja entrar.",
+    "sending": "Enviando…",
+    "waitlistedTitle": "Estás en la lista",
+    "waitlistedBody": "Gracias — anotamos {{email}}. Por ahora no hay nada más que hacer.",
+    "checkEmailTitle": "Revisa tu correo",
+    "checkEmailBody": "Si {{email}} tiene acceso, hay un enlace esperándote. Ábrelo en este dispositivo.",
+    "badCode": "Ese código de acceso no es correcto.",
+    "badInvite": "Esa invitación ya venció o ya se usó.",
+    "tooMany": "Demasiados intentos. Espera un rato e inténtalo de nuevo.",
+    "badEmail": "Eso no parece un correo electrónico.",
+    "serverError": "Algo falló de nuestro lado. Inténtalo de nuevo.",
+    "noInvite": "Esta cuenta todavía no tiene invitación. Pídele a quien te invitó que agregue tu correo."
   }
 }
