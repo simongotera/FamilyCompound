@@ -124,3 +124,11 @@ create policy "members save shortlists as themselves" on public.location_shortli
   for insert to authenticated with check (created_by = (select public.current_member_id()));
 create policy "members delete own shortlists" on public.location_shortlists
   for delete to authenticated using (created_by = (select public.current_member_id()));
+
+-- Table privileges. RLS policies only filter rows — without these grants every
+-- query fails with "permission denied for table", policies or no policies.
+-- Granted to match each table's policies exactly, and nothing wider:
+-- facts and shortlists have no update policy, so they get no UPDATE.
+grant select, insert, update, delete on public.location_quiz_responses to authenticated;
+grant select, insert, delete on public.location_facts to authenticated;
+grant select, insert, delete on public.location_shortlists to authenticated;
