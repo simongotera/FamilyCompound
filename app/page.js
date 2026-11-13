@@ -24,6 +24,7 @@ function Dashboard() {
   const cards = [
     { href: '/land', label: t('dashboard.cardLandLabel'), desc: t('dashboard.cardLandDesc') },
     { href: '/countries', label: t('dashboard.cardCountriesLabel'), desc: t('dashboard.cardCountriesDesc') },
+    { href: '/quiz', label: t('dashboard.cardQuizLabel'), desc: t('dashboard.cardQuizDesc') },
     { href: '/priorities', label: t('dashboard.cardPrioritiesLabel'), desc: t('dashboard.cardPrioritiesDesc') },
     { href: '/budget', label: t('dashboard.cardBudgetLabel'), desc: t('dashboard.cardBudgetDesc') },
     { href: '/decisions', label: t('dashboard.cardDecisionsLabel'), desc: t('dashboard.cardDecisionsDesc') },

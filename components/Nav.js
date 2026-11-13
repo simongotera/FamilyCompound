@@ -15,6 +15,7 @@ export default function Nav() {
     { href: '/', label: t('nav.home') },
     { href: '/land', label: t('nav.land') },
     { href: '/countries', label: t('nav.countries') },
+    { href: '/quiz', label: t('nav.quiz') },
     { href: '/priorities', label: t('nav.priorities') },
     { href: '/budget', label: t('nav.budget') },
     { href: '/decisions', label: t('nav.decisions') },

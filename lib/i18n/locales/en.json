@@ -16,7 +16,8 @@
     "priorities": "Priorities",
     "budget": "Budget",
     "decisions": "Decisions",
-    "tasks": "Tasks"
+    "tasks": "Tasks",
+    "quiz": "Where to"
   },
   "auth": {
     "loginSubtitle": "Enter your email and we'll send you a link to sign in — no password needed.",
@@ -68,7 +69,9 @@
     "cardDecisionsLabel": "Decisions",
     "cardDecisionsDesc": "What we've agreed on, and why",
     "cardTasksLabel": "Tasks",
-    "cardTasksDesc": "What's next, and who owns it"
+    "cardTasksDesc": "What's next, and who owns it",
+    "cardQuizLabel": "Where to settle",
+    "cardQuizDesc": "Everyone’s priorities → a ranked shortlist"
   },
   "land": {
     "title": "Land options",
@@ -239,7 +242,11 @@
       "research_sources": "Sources & disclaimer"
     },
     "enum": {
-      "clear_path_citizenship": { "yes": "Yes", "no": "No", "complex": "Complex" },
+      "clear_path_citizenship": {
+        "yes": "Yes",
+        "no": "No",
+        "complex": "Complex"
+      },
       "retiree_pathway": {
         "income_based": "Income-based residency",
         "family_sponsorship": "Family sponsorship",
@@ -248,15 +255,282 @@
         "ancestry": "Ancestry / descent-based",
         "none": "No clear pathway"
       },
-      "property_purchase_difficulty": { "easy": "Easy", "moderate": "Moderate", "hard": "Hard", "restricted": "Restricted" },
-      "zoning_strictness": { "flexible": "Flexible", "moderate": "Moderate", "strict": "Strict" },
-      "natural_disaster_risk": { "low": "Low", "moderate": "Moderate", "high": "High" },
-      "socioeconomic_stability": { "strong": "Strong", "moderate": "Moderate", "unstable": "Unstable" },
-      "cost_of_living": { "low": "Low", "moderate": "Moderate", "high": "High" },
-      "healthcare_system": { "universal": "Universal", "private": "Private", "mixed": "Mixed" },
-      "safety_level": { "very_safe": "Very safe", "moderate": "Moderate", "caution": "Use caution" },
-      "language_barrier": { "low": "Low", "moderate": "Moderate", "high": "High" },
-      "latino_community": { "strong": "Strong", "moderate": "Moderate", "minimal": "Minimal" }
+      "property_purchase_difficulty": {
+        "easy": "Easy",
+        "moderate": "Moderate",
+        "hard": "Hard",
+        "restricted": "Restricted"
+      },
+      "zoning_strictness": {
+        "flexible": "Flexible",
+        "moderate": "Moderate",
+        "strict": "Strict"
+      },
+      "natural_disaster_risk": {
+        "low": "Low",
+        "moderate": "Moderate",
+        "high": "High"
+      },
+      "socioeconomic_stability": {
+        "strong": "Strong",
+        "moderate": "Moderate",
+        "unstable": "Unstable"
+      },
+      "cost_of_living": {
+        "low": "Low",
+        "moderate": "Moderate",
+        "high": "High"
+      },
+      "healthcare_system": {
+        "universal": "Universal",
+        "private": "Private",
+        "mixed": "Mixed"
+      },
+      "safety_level": {
+        "very_safe": "Very safe",
+        "moderate": "Moderate",
+        "caution": "Use caution"
+      },
+      "language_barrier": {
+        "low": "Low",
+        "moderate": "Moderate",
+        "high": "High"
+      },
+      "latino_community": {
+        "strong": "Strong",
+        "moderate": "Moderate",
+        "minimal": "Minimal"
+      }
+    }
+  },
+  "quiz": {
+    "title": "Where should we land?",
+    "subtitle": "A short questionnaire that turns everyone's priorities into a ranked shortlist — using the Country Profiles and parcels already in here, and saying plainly where we don't have data yet.",
+    "loading": "Loading the quiz…",
+    "someone": "Someone",
+    "savedAnswers": "Saved. Here's how the shortlist looks with your answers in it.",
+    "localMode": "The quiz tables aren't in the database yet, so answers, research and shortlists are being kept in this browser only — nobody else can see them. Apply supabase/migrations/20261113120000_location_quiz.sql to share them.",
+    "whoTook": "Combining answers from: {{list}}",
+    "alreadyTaken": "You've taken this before (last saved {{date}}). Your previous answers are loaded — change anything and save again.",
+    "noLocationsTitle": "Nothing to compare yet",
+    "noCountriesHint": "Add a country on the Countries page first and the quiz will score it.",
+    "noParcelsHint": "Add a parcel on the Land page first and the quiz will score it.",
+    "noAnswersTitle": "Nobody has taken the quiz yet",
+    "noAnswersHint": "Take it yourself on the first tab — one person is enough to get a ranking, and more people make the agreement view useful.",
+    "tab": {
+      "take": "Take the quiz",
+      "results": "Shortlist",
+      "data": "Research & data",
+      "saved": "Saved shortlists"
+    },
+    "scope": {
+      "countries": "Countries",
+      "parcels": "Parcels"
+    },
+    "groups": {
+      "land": "Land & climate",
+      "money": "Money",
+      "legal": "Legal & ownership",
+      "services": "Services",
+      "people": "People & place"
+    },
+    "rating": {
+      "1": "bad for us",
+      "2": "poor",
+      "3": "workable",
+      "4": "good",
+      "5": "excellent"
+    },
+    "origin": {
+      "fact": "researched",
+      "countryFact": "researched (country)",
+      "computed": "from price & acreage",
+      "profile": "from country profile",
+      "countryProfile": "from country profile",
+      "missing": "no data"
+    },
+    "criteria": {
+      "climate": {
+        "name": "Climate & growing season",
+        "desc": "Growing zone, frost dates, heat — can we actually grow what we want to grow?"
+      },
+      "water": {
+        "name": "Water",
+        "desc": "Rainfall, groundwater, and the legal right to use it."
+      },
+      "soil": {
+        "name": "Soil",
+        "desc": "Depth, drainage and fertility, ideally from a real soil test."
+      },
+      "hazards": {
+        "name": "Natural hazards",
+        "desc": "Flood, fire, hurricane, earthquake and drought risk."
+      },
+      "land_price": {
+        "name": "Land price",
+        "desc": "Price per acre, compared across the parcels we're looking at."
+      },
+      "cost_of_living": {
+        "name": "Cost of living & taxes",
+        "desc": "Day-to-day costs and property tax."
+      },
+      "zoning": {
+        "name": "Zoning & multiple dwellings",
+        "desc": "Legal room for several homes and shared ownership on one piece of land."
+      },
+      "property_access": {
+        "name": "Buying as foreigners",
+        "desc": "How hard it is for us to actually own land there."
+      },
+      "residency": {
+        "name": "Residency & visas",
+        "desc": "A clear path to stay long term."
+      },
+      "healthcare": {
+        "name": "Healthcare access",
+        "desc": "Quality and distance of care we'd actually use."
+      },
+      "internet": {
+        "name": "Internet",
+        "desc": "Enough bandwidth to work from there."
+      },
+      "safety": {
+        "name": "Safety & stability",
+        "desc": "Personal safety and how stable things look over decades."
+      },
+      "family_distance": {
+        "name": "Distance to family",
+        "desc": "How easy it is for the rest of the family to get there."
+      },
+      "community": {
+        "name": "Community & culture",
+        "desc": "People we'd want as neighbours, and a culture we fit into."
+      },
+      "language": {
+        "name": "Language",
+        "desc": "How much of a barrier the local language would be."
+      }
+    },
+    "wizard": {
+      "progress": "Quiz steps",
+      "step": {
+        "importance": "What matters",
+        "compare": "Head to head",
+        "dealbreakers": "Dealbreakers",
+        "review": "Review"
+      },
+      "importanceTitle": "How much does each of these matter to you?",
+      "importanceHint": "Drag each slider. 0 means you genuinely don't care; 10 means it's the thing you'd move for. Don't overthink it — the next step sharpens your top few.",
+      "slider": {
+        "notAtAll": "doesn't matter",
+        "niceToHave": "nice to have",
+        "important": "important",
+        "veryImportant": "very important",
+        "critical": "critical"
+      },
+      "compareTitle": "Your top few, head to head",
+      "compareHint": "Just your {{count}} highest-rated criteria, two at a time. This is the AHP step: comparing pairs is easier to answer honestly than setting numbers, and it catches contradictions.",
+      "compareNotEnough": "Rate at least two things above zero on the previous step and they'll show up here.",
+      "vs": "vs",
+      "scale": {
+        "aMuchMore": "{{a}} matters much more",
+        "aMore": "{{a}} matters more",
+        "aBitMore": "{{a}} a bit more",
+        "equal": "about the same",
+        "bBitMore": "{{b}} a bit more",
+        "bMore": "{{b}} matters more",
+        "bMuchMore": "{{b}} matters much more"
+      },
+      "answered": "Answered {{done}} of {{total}} pairs. Any you skip fall back to your sliders.",
+      "consistent": "Your answers hang together (consistency ratio {{cr}} — under 0.10 is good).",
+      "inconsistent": "Your answers contradict each other a bit (consistency ratio {{cr}}; 0.10 or under is the usual bar). The roughest pair is {{a}} vs {{b}} — worth a second look, though we'll still use your answers.",
+      "yourWeights": "What that gives you",
+      "skipCompare": "Clear the comparisons and just use my sliders",
+      "dealbreakersTitle": "What would rule a place out entirely?",
+      "dealbreakersHint": "A dealbreaker isn't a low score — it excludes a place for everyone. Use it sparingly. If we have no data for something you've made a dealbreaker, the place is flagged \"unverified\" rather than thrown out.",
+      "yourLoggedDealbreakers": "Dealbreakers you've already logged on the Priorities page:",
+      "noMinimum": "no minimum",
+      "atLeast": "at least {{rating}} ({{label}})",
+      "maxPricePerAcre": "Most I'd pay per acre",
+      "noCap": "no limit",
+      "reviewTitle": "Here's what we'll use for you",
+      "reviewHint": "Your weights add up to 100%. You can retake this any time and the shortlist updates.",
+      "noDealbreakers": "You set no dealbreakers.",
+      "dealbreakerCount": "You set {{count}} dealbreaker(s).",
+      "back": "Back",
+      "next": "Next",
+      "save": "Save my answers",
+      "saving": "Saving…"
+    },
+    "results": {
+      "shortlistTitle": "The shortlist",
+      "shortlistHint": "Weighted sum of everyone's priorities ({{n}} answered), scored only on criteria we have data for. Open a place to see every number and where it came from.",
+      "nothingScored": "No place has enough data to score yet. Add research on the next tab.",
+      "outOf100": "of 100",
+      "coverage": "Data coverage {{pct}} of your weight",
+      "range": "worst/best case if the gaps go badly or well: {{low}}–{{high}}",
+      "unverified": "Unverified dealbreakers: {{list}}",
+      "perPersonRank": "Each person's own ranking",
+      "showDetail": "Show every criterion and source",
+      "hideDetail": "Hide the detail",
+      "criterion": "Criterion",
+      "weight": "Weight",
+      "rating": "Rating",
+      "where": "Where it came from",
+      "noData": "no data",
+      "pricePerAcre": "${{value}} per acre",
+      "noDataAtAll": "Not scored at all, for lack of any data: {{list}}",
+      "addResearch": "Add research →",
+      "excludedTitle": "Ruled out by a dealbreaker",
+      "excludedHint": "One person's dealbreaker excludes a place for the group. Change it on the quiz's dealbreakers step if that's wrong.",
+      "failedRating": "{{person}} needs {{criterion}} at least {{min}}, it rates {{rating}}",
+      "failedPrice": "{{person}} caps price at ${{cap}}/acre, this is ${{actual}}",
+      "sensitivityTitle": "What would flip the top pick",
+      "sensitivityHint": "How much one criterion's weight would have to move before a different place wins. A pick that only survives a narrow band of weights isn't a strong pick.",
+      "needTwo": "Two scored places are needed before this means anything.",
+      "leadSummary": "{{leader}} leads {{runnerUp}} by {{gap}} points.",
+      "noFlips": "No single criterion's weight can change the top pick — {{leader}} wins across the whole range. That's a robust result.",
+      "flip": "{{criterion}}: move its weight {{direction}} from {{from}} to {{to}} and {{newLeader}} wins instead.",
+      "up": "up",
+      "down": "down",
+      "dataRisk": "Careful: with the gaps filled in favourably, {{list}} could overtake {{leader}}. Research those before deciding.",
+      "weightsTitle": "What we're weighing, and where we disagree",
+      "weightsHint": "The group's weights are the average of everyone's. Big spreads are the conversations worth having.",
+      "groupWeights": "Group weights",
+      "disagreement": "Biggest disagreements",
+      "needTwoPeople": "Once a second person takes the quiz, disagreements show up here.",
+      "inconsistentPeople": "Inconsistent pairwise answers (consistency ratio over 0.10): {{list}}. Their weights still count; they may want to redo the head-to-head step."
+    },
+    "facts": {
+      "title": "Research & data",
+      "hint": "The quiz scores a place from researched facts first, then from the Country Profile, and otherwise not at all — it never invents a number. A source is required so we can check it later.",
+      "target": "Country or parcel",
+      "choose": "Choose…",
+      "criterion": "Criterion",
+      "rating": "Rating for us (1–5)",
+      "measured": "The actual figure (optional)",
+      "measuredPlaceholder": "e.g. 1,150 mm/year; zone 8b; last frost Apr 15",
+      "source": "Source (required)",
+      "sourcePlaceholder": "Link, agency, report, or who told us",
+      "notes": "Notes",
+      "add": "Add this fact",
+      "adding": "Adding…",
+      "pickTarget": "Pick a country or parcel first.",
+      "sourceRequired": "Please say where this came from — the quiz won't score an unsourced number.",
+      "counts": "{{researched}} researched · {{profile}} from the country profile · {{missing}} with no data",
+      "deleteConfirm": "Delete this researched fact?"
+    },
+    "saved": {
+      "title": "Saved shortlists",
+      "hint": "A snapshot of a ranking, so we can look back at what we thought and why.",
+      "save": "Save this shortlist",
+      "saved": "Shortlist saved.",
+      "defaultTitle": "{{scope}} shortlist, {{date}}",
+      "participants": "took it: {{list}}",
+      "emptyTitle": "No shortlists saved yet",
+      "emptyHint": "Save one from the shortlist tab once a few people have taken the quiz.",
+      "deleteConfirm": "Delete this saved shortlist?",
+      "flipNote": "Flips to {{newLeader}} if {{criterion}} is weighted differently."
     }
   }
 }

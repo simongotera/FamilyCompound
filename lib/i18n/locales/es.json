@@ -16,7 +16,8 @@
     "priorities": "Prioridades",
     "budget": "Presupuesto",
     "decisions": "Decisiones",
-    "tasks": "Tareas"
+    "tasks": "Tareas",
+    "quiz": "Dónde"
   },
   "auth": {
     "loginSubtitle": "Ingresa tu correo y te enviaremos un enlace para iniciar sesión — sin necesidad de contraseña.",
@@ -68,7 +69,9 @@
     "cardDecisionsLabel": "Decisiones",
     "cardDecisionsDesc": "Lo que hemos acordado, y por qué",
     "cardTasksLabel": "Tareas",
-    "cardTasksDesc": "Qué sigue, y quién se encarga"
+    "cardTasksDesc": "Qué sigue, y quién se encarga",
+    "cardQuizLabel": "Dónde asentarnos",
+    "cardQuizDesc": "Las prioridades de todos → una lista corta ordenada"
   },
   "land": {
     "title": "Opciones de terreno",
@@ -239,7 +242,11 @@
       "research_sources": "Fuentes y aviso legal"
     },
     "enum": {
-      "clear_path_citizenship": { "yes": "Sí", "no": "No", "complex": "Complejo" },
+      "clear_path_citizenship": {
+        "yes": "Sí",
+        "no": "No",
+        "complex": "Complejo"
+      },
       "retiree_pathway": {
         "income_based": "Residencia por ingresos",
         "family_sponsorship": "Patrocinio familiar",
@@ -248,15 +255,282 @@
         "ancestry": "Por ascendencia / descendencia",
         "none": "Sin vía clara"
       },
-      "property_purchase_difficulty": { "easy": "Fácil", "moderate": "Moderado", "hard": "Difícil", "restricted": "Restringido" },
-      "zoning_strictness": { "flexible": "Flexible", "moderate": "Moderada", "strict": "Estricta" },
-      "natural_disaster_risk": { "low": "Bajo", "moderate": "Moderado", "high": "Alto" },
-      "socioeconomic_stability": { "strong": "Fuerte", "moderate": "Moderada", "unstable": "Inestable" },
-      "cost_of_living": { "low": "Bajo", "moderate": "Moderado", "high": "Alto" },
-      "healthcare_system": { "universal": "Universal", "private": "Privado", "mixed": "Mixto" },
-      "safety_level": { "very_safe": "Muy seguro", "moderate": "Moderado", "caution": "Con precaución" },
-      "language_barrier": { "low": "Baja", "moderate": "Moderada", "high": "Alta" },
-      "latino_community": { "strong": "Fuerte", "moderate": "Moderada", "minimal": "Mínima" }
+      "property_purchase_difficulty": {
+        "easy": "Fácil",
+        "moderate": "Moderado",
+        "hard": "Difícil",
+        "restricted": "Restringido"
+      },
+      "zoning_strictness": {
+        "flexible": "Flexible",
+        "moderate": "Moderada",
+        "strict": "Estricta"
+      },
+      "natural_disaster_risk": {
+        "low": "Bajo",
+        "moderate": "Moderado",
+        "high": "Alto"
+      },
+      "socioeconomic_stability": {
+        "strong": "Fuerte",
+        "moderate": "Moderada",
+        "unstable": "Inestable"
+      },
+      "cost_of_living": {
+        "low": "Bajo",
+        "moderate": "Moderado",
+        "high": "Alto"
+      },
+      "healthcare_system": {
+        "universal": "Universal",
+        "private": "Privado",
+        "mixed": "Mixto"
+      },
+      "safety_level": {
+        "very_safe": "Muy seguro",
+        "moderate": "Moderado",
+        "caution": "Con precaución"
+      },
+      "language_barrier": {
+        "low": "Baja",
+        "moderate": "Moderada",
+        "high": "Alta"
+      },
+      "latino_community": {
+        "strong": "Fuerte",
+        "moderate": "Moderada",
+        "minimal": "Mínima"
+      }
+    }
+  },
+  "quiz": {
+    "title": "¿Dónde echamos raíces?",
+    "subtitle": "Un cuestionario corto que convierte las prioridades de cada quien en una lista corta ordenada — usando los perfiles de países y los terrenos que ya están aquí, y diciendo claramente dónde todavía no tenemos datos.",
+    "loading": "Cargando el cuestionario…",
+    "someone": "Alguien",
+    "savedAnswers": "Guardado. Así queda la lista corta con tus respuestas.",
+    "localMode": "Las tablas del cuestionario aún no están en la base de datos, así que las respuestas, la investigación y las listas se guardan solo en este navegador — nadie más las ve. Aplica supabase/migrations/20261113120000_location_quiz.sql para compartirlas.",
+    "whoTook": "Combinando respuestas de: {{list}}",
+    "alreadyTaken": "Ya lo hiciste antes (guardado el {{date}}). Tus respuestas anteriores están cargadas — cambia lo que quieras y guarda de nuevo.",
+    "noLocationsTitle": "Todavía no hay nada que comparar",
+    "noCountriesHint": "Agrega un país en la página de Países y el cuestionario lo puntuará.",
+    "noParcelsHint": "Agrega un terreno en la página de Terrenos y el cuestionario lo puntuará.",
+    "noAnswersTitle": "Nadie ha hecho el cuestionario",
+    "noAnswersHint": "Hazlo tú en la primera pestaña — con una persona ya sale un ranking, y con más se vuelve útil la vista de acuerdos.",
+    "tab": {
+      "take": "Hacer el cuestionario",
+      "results": "Lista corta",
+      "data": "Investigación y datos",
+      "saved": "Listas guardadas"
+    },
+    "scope": {
+      "countries": "Países",
+      "parcels": "Terrenos"
+    },
+    "groups": {
+      "land": "Tierra y clima",
+      "money": "Dinero",
+      "legal": "Legal y propiedad",
+      "services": "Servicios",
+      "people": "Gente y lugar"
+    },
+    "rating": {
+      "1": "malo para nosotros",
+      "2": "pobre",
+      "3": "aceptable",
+      "4": "bueno",
+      "5": "excelente"
+    },
+    "origin": {
+      "fact": "investigado",
+      "countryFact": "investigado (país)",
+      "computed": "del precio y la superficie",
+      "profile": "del perfil del país",
+      "countryProfile": "del perfil del país",
+      "missing": "sin datos"
+    },
+    "criteria": {
+      "climate": {
+        "name": "Clima y temporada de cultivo",
+        "desc": "Zona de cultivo, heladas, calor — ¿de verdad podemos cultivar lo que queremos?"
+      },
+      "water": {
+        "name": "Agua",
+        "desc": "Lluvia, agua subterránea y el derecho legal a usarla."
+      },
+      "soil": {
+        "name": "Suelo",
+        "desc": "Profundidad, drenaje y fertilidad, idealmente con un análisis real."
+      },
+      "hazards": {
+        "name": "Riesgos naturales",
+        "desc": "Riesgo de inundación, incendio, huracán, sismo y sequía."
+      },
+      "land_price": {
+        "name": "Precio de la tierra",
+        "desc": "Precio por acre, comparado entre los terrenos que estamos viendo."
+      },
+      "cost_of_living": {
+        "name": "Costo de vida e impuestos",
+        "desc": "Gastos del día a día e impuesto predial."
+      },
+      "zoning": {
+        "name": "Zonificación y varias viviendas",
+        "desc": "Margen legal para varias casas y propiedad compartida en un mismo terreno."
+      },
+      "property_access": {
+        "name": "Comprar como extranjeros",
+        "desc": "Qué tan difícil es que seamos dueños ahí."
+      },
+      "residency": {
+        "name": "Residencia y visas",
+        "desc": "Un camino claro para quedarnos a largo plazo."
+      },
+      "healthcare": {
+        "name": "Acceso a salud",
+        "desc": "Calidad y distancia de la atención que de verdad usaríamos."
+      },
+      "internet": {
+        "name": "Internet",
+        "desc": "Suficiente ancho de banda para trabajar desde ahí."
+      },
+      "safety": {
+        "name": "Seguridad y estabilidad",
+        "desc": "Seguridad personal y qué tan estable se ve todo a largo plazo."
+      },
+      "family_distance": {
+        "name": "Distancia a la familia",
+        "desc": "Qué tan fácil es que el resto de la familia llegue."
+      },
+      "community": {
+        "name": "Comunidad y cultura",
+        "desc": "Gente que querríamos de vecinos, y una cultura donde encajemos."
+      },
+      "language": {
+        "name": "Idioma",
+        "desc": "Qué tanta barrera sería el idioma local."
+      }
+    },
+    "wizard": {
+      "progress": "Pasos del cuestionario",
+      "step": {
+        "importance": "Qué importa",
+        "compare": "Cara a cara",
+        "dealbreakers": "Inaceptables",
+        "review": "Revisar"
+      },
+      "importanceTitle": "¿Cuánto te importa cada cosa?",
+      "importanceHint": "Mueve cada control. 0 significa que de verdad no te importa; 10, que te mudarías por eso. No lo pienses demasiado — el siguiente paso afina tus prioridades más altas.",
+      "slider": {
+        "notAtAll": "no importa",
+        "niceToHave": "estaría bien",
+        "important": "importante",
+        "veryImportant": "muy importante",
+        "critical": "decisivo"
+      },
+      "compareTitle": "Tus prioridades más altas, cara a cara",
+      "compareHint": "Solo tus {{count}} criterios mejor calificados, de dos en dos. Este es el paso AHP: comparar pares es más fácil de responder con honestidad que poner números, y detecta contradicciones.",
+      "compareNotEnough": "Califica al menos dos cosas por encima de cero en el paso anterior y aparecerán aquí.",
+      "vs": "vs",
+      "scale": {
+        "aMuchMore": "{{a}} importa mucho más",
+        "aMore": "{{a}} importa más",
+        "aBitMore": "{{a}} un poco más",
+        "equal": "más o menos igual",
+        "bBitMore": "{{b}} un poco más",
+        "bMore": "{{b}} importa más",
+        "bMuchMore": "{{b}} importa mucho más"
+      },
+      "answered": "Respondiste {{done}} de {{total}} pares. Los que omitas se resuelven con tus controles.",
+      "consistent": "Tus respuestas son coherentes (razón de consistencia {{cr}} — menos de 0.10 está bien).",
+      "inconsistent": "Tus respuestas se contradicen un poco (razón de consistencia {{cr}}; lo normal es 0.10 o menos). El par más flojo es {{a}} vs {{b}} — vale la pena revisarlo, aunque igual usaremos tus respuestas.",
+      "yourWeights": "Esto es lo que resulta",
+      "skipCompare": "Borrar las comparaciones y usar solo mis controles",
+      "dealbreakersTitle": "¿Qué descartaría un lugar por completo?",
+      "dealbreakersHint": "Un inaceptable no es una nota baja: excluye el lugar para todos. Úsalo con cuidado. Si no tenemos datos de algo que marcaste como inaceptable, el lugar queda \"sin verificar\" en vez de descartado.",
+      "yourLoggedDealbreakers": "Inaceptables que ya anotaste en la página de Prioridades:",
+      "noMinimum": "sin mínimo",
+      "atLeast": "al menos {{rating}} ({{label}})",
+      "maxPricePerAcre": "Lo máximo que pagaría por acre",
+      "noCap": "sin límite",
+      "reviewTitle": "Esto es lo que usaremos por ti",
+      "reviewHint": "Tus pesos suman 100%. Puedes repetirlo cuando quieras y la lista corta se actualiza.",
+      "noDealbreakers": "No marcaste ningún inaceptable.",
+      "dealbreakerCount": "Marcaste {{count}} inaceptable(s).",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "save": "Guardar mis respuestas",
+      "saving": "Guardando…"
+    },
+    "results": {
+      "shortlistTitle": "La lista corta",
+      "shortlistHint": "Suma ponderada de las prioridades de todos ({{n}} respondieron), puntuando solo los criterios con datos. Abre un lugar para ver cada número y de dónde salió.",
+      "nothingScored": "Ningún lugar tiene datos suficientes para puntuar. Agrega investigación en la otra pestaña.",
+      "outOf100": "de 100",
+      "coverage": "Cobertura de datos: {{pct}} de tu peso",
+      "range": "peor/mejor caso si los huecos salen mal o bien: {{low}}–{{high}}",
+      "unverified": "Inaceptables sin verificar: {{list}}",
+      "perPersonRank": "El ranking de cada persona",
+      "showDetail": "Ver cada criterio y su fuente",
+      "hideDetail": "Ocultar el detalle",
+      "criterion": "Criterio",
+      "weight": "Peso",
+      "rating": "Nota",
+      "where": "De dónde salió",
+      "noData": "sin datos",
+      "pricePerAcre": "${{value}} por acre",
+      "noDataAtAll": "Sin puntuar por falta total de datos: {{list}}",
+      "addResearch": "Agregar investigación →",
+      "excludedTitle": "Descartados por un inaceptable",
+      "excludedHint": "El inaceptable de una persona descarta el lugar para el grupo. Cámbialo en el paso de inaceptables si no es así.",
+      "failedRating": "{{person}} necesita {{criterion}} al menos {{min}}, y está en {{rating}}",
+      "failedPrice": "{{person}} pone un tope de ${{cap}}/acre, y este está en ${{actual}}",
+      "sensitivityTitle": "Qué cambiaría al primer lugar",
+      "sensitivityHint": "Cuánto tendría que moverse el peso de un criterio para que gane otro lugar. Un primer lugar que solo sobrevive en un rango estrecho de pesos no es un primer lugar fuerte.",
+      "needTwo": "Hacen falta dos lugares puntuados para que esto signifique algo.",
+      "leadSummary": "{{leader}} le lleva {{gap}} puntos a {{runnerUp}}.",
+      "noFlips": "Ningún peso por sí solo cambia al primer lugar — {{leader}} gana en todo el rango. Es un resultado robusto.",
+      "flip": "{{criterion}}: mueve su peso {{direction}} de {{from}} a {{to}} y gana {{newLeader}}.",
+      "up": "hacia arriba",
+      "down": "hacia abajo",
+      "dataRisk": "Cuidado: si los huecos se llenan a su favor, {{list}} podría pasar a {{leader}}. Investiga eso antes de decidir.",
+      "weightsTitle": "Qué estamos pesando, y dónde no coincidimos",
+      "weightsHint": "Los pesos del grupo son el promedio de los de cada quien. Las diferencias grandes son las conversaciones que vale la pena tener.",
+      "groupWeights": "Pesos del grupo",
+      "disagreement": "Mayores desacuerdos",
+      "needTwoPeople": "Cuando una segunda persona haga el cuestionario, los desacuerdos aparecen aquí.",
+      "inconsistentPeople": "Respuestas cara a cara inconsistentes (razón de consistencia mayor a 0.10): {{list}}. Sus pesos siguen contando; quizá quieran repetir ese paso."
+    },
+    "facts": {
+      "title": "Investigación y datos",
+      "hint": "El cuestionario puntúa primero con datos investigados, luego con el perfil del país, y si no, no puntúa — nunca inventa un número. La fuente es obligatoria para poder revisarlo después.",
+      "target": "País o terreno",
+      "choose": "Elige…",
+      "criterion": "Criterio",
+      "rating": "Nota para nosotros (1–5)",
+      "measured": "El dato real (opcional)",
+      "measuredPlaceholder": "ej. 1,150 mm/año; zona 8b; última helada 15 abr",
+      "source": "Fuente (obligatoria)",
+      "sourcePlaceholder": "Enlace, organismo, informe, o quién nos lo dijo",
+      "notes": "Notas",
+      "add": "Agregar este dato",
+      "adding": "Agregando…",
+      "pickTarget": "Primero elige un país o terreno.",
+      "sourceRequired": "Di de dónde salió — el cuestionario no puntúa un número sin fuente.",
+      "counts": "{{researched}} investigados · {{profile}} del perfil del país · {{missing}} sin datos",
+      "deleteConfirm": "¿Eliminar este dato investigado?"
+    },
+    "saved": {
+      "title": "Listas cortas guardadas",
+      "hint": "Una foto de un ranking, para poder volver a ver qué pensábamos y por qué.",
+      "save": "Guardar esta lista corta",
+      "saved": "Lista corta guardada.",
+      "defaultTitle": "Lista de {{scope}}, {{date}}",
+      "participants": "la hicieron: {{list}}",
+      "emptyTitle": "Todavía no hay listas guardadas",
+      "emptyHint": "Guarda una desde la pestaña de lista corta cuando varias personas hayan respondido.",
+      "deleteConfirm": "¿Eliminar esta lista guardada?",
+      "flipNote": "Cambia a {{newLeader}} si {{criterion}} se pesa distinto."
     }
   }
 }
