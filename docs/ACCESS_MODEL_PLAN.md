@@ -268,3 +268,42 @@ a time, and nothing is pushed or deployed until he's seen it work.
    delete anything, so this is a real change.
 4. **Does the coming-soon page say what The Compound is**, or stay vague until he's ready to
    show it publicly?
+
+---
+
+## 10. Built after the fact: handing out access from inside the app
+
+§6 answered "where does Simon type the code" with *the Supabase SQL editor*. That was the right
+answer for one person on day one and the wrong one for a family: it makes Simon the bottleneck
+for every relative anybody wants to add, and it puts a non-engineer in front of a SQL console.
+
+`/invite` replaces it. Any signed-in member can now hand out access to their own family, in the
+order we'd rather they used:
+
+1. **A link for one named person** (`create_invite_link`) — single use, individually revocable,
+   and the audit trail records which email claimed it. This is the default and the recommended
+   path, for the reasons already set out in §5.
+2. **A shared code** (`create_access_code`) — behind a second click, under the honest warning
+   that a code read aloud is a code the whole group chat keeps. Stingier than the SQL-editor
+   version on purpose: at most 25 uses, at most 90 days, at most three alive per family.
+
+What did **not** change, and must not:
+
+- No table privilege was granted to `anon` or `authenticated`. The gate tables remain
+  unreachable through PostgREST; the four new functions are the only new surface.
+- Only bcrypt hashes are stored. The plaintext is returned once by the function that generated
+  it, shown once in the browser, and is unrecoverable after a refresh.
+- The caller never names a family. Each function resolves it from the caller's own `members`
+  row, so a member can only invite into their own family.
+- Caps are per member *and* per family (10 links/day/member, 50 outstanding/family; 3
+  codes/day/member, 3 live/family), so neither an over-enthusiastic relative nor a stolen
+  session can mint in bulk. Refusals come back as SQLSTATE `PT429`/`PT409`, which PostgREST
+  turns into HTTP 429/409, and the client maps the code to a translated sentence rather than
+  shipping an English error string to a Spanish speaker.
+- `mint_access_code` / `mint_invite_link` — the uncapped SQL-editor functions — are untouched
+  and still granted to nobody.
+
+`supabase/tests/invites_from_the_app.test.sql` proves all of it against the real database inside
+a transaction it rolls back: token and code shape, clamping, bcrypt cost, that the gate accepts
+what the app mints, that a member is *refused* when reading `invite_links` directly, revoking,
+double-revoke, both daily caps, and that no privilege leaked to `anon` or `authenticated`.

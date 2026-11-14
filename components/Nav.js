@@ -20,6 +20,7 @@ export default function Nav() {
     { href: '/budget', label: t('nav.budget') },
     { href: '/decisions', label: t('nav.decisions') },
     { href: '/tasks', label: t('nav.tasks') },
+    { href: '/invite', label: t('nav.invite') },
   ]
 
   return (
