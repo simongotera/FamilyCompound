@@ -24,6 +24,14 @@ begin
     json_build_object('sub', me.auth_user_id, 'role', 'authenticated', 'email', me.email)::text, true);
   set local role authenticated;
 
+  -- 0. require_member() is internal: a member cannot call it, but the functions that call it
+  --    from the inside still work, because those run as the owner.
+  begin
+    perform public.require_member();
+    raise exception 'FAIL require_member is callable by a member';
+  exception when insufficient_privilege then null;
+  end;
+
   -- 1. a per-person invite: 24 random bytes, hex, expiring when asked
   select * into inv from public.create_invite_link('Aunt Rosa', 14);
   if inv.token is null or inv.token !~ '^[0-9a-f]{48}$' then
@@ -153,12 +161,14 @@ begin
      and not has_function_privilege('authenticated', p.oid, 'execute');
   if leaked is not null then raise exception 'FAIL members cannot execute: %', leaked; end if;
 
+  -- the SQL-editor minters, and the internal helper, stay out of the browser's reach
   select string_agg(p.proname, ', ') into leaked
     from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
-   where ns.nspname = 'public' and p.proname in ('mint_access_code','mint_invite_link')
+   where ns.nspname = 'public'
+     and p.proname in ('mint_access_code','mint_invite_link','require_member')
      and (has_function_privilege('anon', p.oid, 'execute')
           or has_function_privilege('authenticated', p.oid, 'execute'));
-  if leaked is not null then raise exception 'FAIL SQL-editor minters exposed: %', leaked; end if;
+  if leaked is not null then raise exception 'FAIL internal functions exposed: %', leaked; end if;
 
   raise notice 'privilege tests passed';
 end

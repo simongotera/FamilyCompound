@@ -68,8 +68,10 @@ begin
   return me;
 end
 $$;
-revoke all on function public.require_member() from public, anon;
-grant execute on function public.require_member() to authenticated;
+-- Not granted to anybody. It is called only from inside the other SECURITY DEFINER functions
+-- below, which run as the owner, so `authenticated` never needs EXECUTE on it — granting it
+-- would only expose one more /rest/v1/rpc endpoint for no benefit.
+revoke all on function public.require_member() from public, anon, authenticated;
 
 -- ---------- minting, from the app ----------
 
